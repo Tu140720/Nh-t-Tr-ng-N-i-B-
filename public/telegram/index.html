@@ -85,56 +85,54 @@
         </section>
 
         <section class="panel panel-sidebar hidden" id="workspace-panel">
-          <div class="panel-head workspace-head">
-            <div>
-              <p class="panel-kicker">Dieu huong</p>
-              <h2>Lam viec tren Telegram</h2>
-            </div>
-            <button class="ghost-button" id="logout-button" type="button">Dang xuat</button>
-          </div>
-          <div class="workspace-summary">
-            <article class="workspace-summary-card">
-              <span>Che do</span>
-              <strong>Bang dieu huong nhanh</strong>
-              <p>Chon 1 luong lam viec o cot trai, thao tac chinh mo o khung ben phai.</p>
-            </article>
-            <article class="workspace-summary-card">
-              <span>Toi uu</span>
-              <strong>Giong tren desktop hon</strong>
-              <p>Man hinh rong se hien bo cuc ro tung khu vuc thay vi xep dong nhu mobile.</p>
-            </article>
-          </div>
-
           <div class="action-grid" id="action-grid">
             <button class="action-card accent-delivery" data-section="delivery" type="button">
-              <span class="action-index">01</span>
-              <span class="action-copy">
-                <span class="action-title">Hoan thanh giao hang</span>
-                <span class="action-subtitle">Cap nhat ket qua giao, thanh toan va ghi chu tai cho</span>
-              </span>
+              <span class="action-title">Hoan thanh giao hang</span>
             </button>
             <button class="action-card accent-tape" data-section="tape" type="button">
-              <span class="action-index">02</span>
-              <span class="action-copy">
-                <span class="action-title">Bang tinh bang dinh</span>
-                <span class="action-subtitle">Tinh nhanh so tay, so cuon va du hao ngay tren 1 bang</span>
-              </span>
+              <span class="action-title">Bang tinh bang dinh</span>
             </button>
             <button class="action-card accent-order" data-section="create" type="button">
-              <span class="action-index">03</span>
-              <span class="action-copy">
-                <span class="action-title">Tao don</span>
-                <span class="action-subtitle">Tao don van chuyen hoac phieu san xuat bang form rut gon</span>
-              </span>
+              <span class="action-title">Tao don</span>
             </button>
             <button class="action-card accent-track" data-section="tracking" type="button">
-              <span class="action-index">04</span>
-              <span class="action-copy">
-                <span class="action-title">Theo doi don</span>
-                <span class="action-subtitle">Loc nhanh va xem tinh trang don trong mot bang tong hop</span>
-              </span>
+              <span class="action-title">Theo doi don</span>
             </button>
           </div>
+
+          <button class="chat-launch-button" id="new-chat-button" type="button">Doan chat moi</button>
+
+          <section class="notification-home-card">
+            <div class="notification-section-head">
+              <p class="notification-section-title">Thong bao</p>
+              <button class="mini-link-button" id="logout-button" type="button">Dang xuat</button>
+            </div>
+
+            <div class="notification-toolbar">
+              <label class="notification-filter-wrap">
+                <select id="notification-filter" aria-label="Loc thong bao">
+                  <option value="all">Tat ca</option>
+                  <option value="unread">Chua doc</option>
+                </select>
+              </label>
+              <button class="mini-pill-button" id="mark-all-notifications-read" type="button">Da doc het</button>
+              <span class="mini-count-pill" id="notification-count">0</span>
+            </div>
+
+            <div class="notification-list" id="notification-list"></div>
+
+            <div class="notification-divider"></div>
+
+            <div class="notification-section-head">
+              <p class="notification-section-title">Lich su thong bao</p>
+              <div class="notification-history-actions">
+                <button class="mini-pill-button" id="clear-notification-history" type="button">Xoa lich su</button>
+                <span class="mini-count-pill" id="notification-history-count">0</span>
+              </div>
+            </div>
+
+            <div class="notification-history-list" id="notification-history-list"></div>
+          </section>
         </section>
 
         <section class="panel feature-panel hidden" id="delivery-panel">

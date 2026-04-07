@@ -4,17 +4,26 @@ const loginVerifyUrl = "/api/login/verify";
 const logoutUrl = "/api/logout";
 const usersUrl = "/api/users";
 const ordersUrl = "/api/orders";
+const notificationsUrl = "/api/notifications";
+const notificationsReadUrl = "/api/notifications/read";
+const notificationsReadAllUrl = "/api/notifications/read-all";
 const deliveryCompleteUrl = "/api/delivery/complete";
 const orderCreateUrl = "/api/orders/create";
 const tapeCalculatorConfigUrl = "/api/tape-calculator/config";
 
 const AUTH_STORAGE_KEY = "telegramMiniAuthToken";
+const NOTIFICATION_ARCHIVE_STORAGE_PREFIX = "telegramMiniNotificationArchive";
+const NOTIFICATION_ARCHIVE_MAX_ITEMS = 50;
+const NOTIFICATION_POLL_INTERVAL_MS = 30_000;
 
 const state = {
   authToken: localStorage.getItem(AUTH_STORAGE_KEY) || "",
   currentUser: null,
   users: [],
   orders: [],
+  notifications: [],
+  notificationArchive: [],
+  notificationFilter: "all",
   challengeToken: "",
   orderKind: "transport",
   trackingKind: "transport",
@@ -22,6 +31,8 @@ const state = {
   tapeLoaded: false,
   activeSection: "",
 };
+
+let notificationPollTimer = null;
 
 const loginPanel = document.querySelector("#login-panel");
 const workspacePanel = document.querySelector("#workspace-panel");
@@ -33,9 +44,17 @@ const otpBlock = document.querySelector("#otp-block");
 const otpNote = document.querySelector("#otp-note");
 const loginSubmit = document.querySelector("#login-submit");
 const logoutButton = document.querySelector("#logout-button");
+const newChatButton = document.querySelector("#new-chat-button");
 const heroUserName = document.querySelector("#hero-user-name");
 const heroUserMeta = document.querySelector("#hero-user-meta");
 const actionButtons = Array.from(document.querySelectorAll("[data-section]"));
+const notificationFilter = document.querySelector("#notification-filter");
+const notificationList = document.querySelector("#notification-list");
+const notificationCount = document.querySelector("#notification-count");
+const notificationHistoryList = document.querySelector("#notification-history-list");
+const notificationHistoryCount = document.querySelector("#notification-history-count");
+const markAllNotificationsReadButton = document.querySelector("#mark-all-notifications-read");
+const clearNotificationHistoryButton = document.querySelector("#clear-notification-history");
 
 const deliveryPanel = document.querySelector("#delivery-panel");
 const tapePanel = document.querySelector("#tape-panel");
@@ -130,11 +149,22 @@ function initTelegramShell() {
 function bindEvents() {
   loginForm?.addEventListener("submit", handleLoginSubmit);
   logoutButton?.addEventListener("click", handleLogout);
+  newChatButton?.addEventListener("click", openNewChat);
+  notificationFilter?.addEventListener("change", () => {
+    state.notificationFilter = notificationFilter.value || "all";
+    renderNotifications();
+  });
+  markAllNotificationsReadButton?.addEventListener("click", handleMarkAllNotificationsRead);
+  clearNotificationHistoryButton?.addEventListener("click", handleClearNotificationHistory);
   actionButtons.forEach((button) => {
     button.addEventListener("click", () => {
       const section = button.dataset.section || "";
       if (!isSectionAllowed(section)) {
         showToast("Ban khong co quyen dung muc nay.", "error");
+        return;
+      }
+      if (state.activeSection === section) {
+        hideAllFeaturePanels();
         return;
       }
       if (TelegramWebApp?.HapticFeedback?.impactOccurred) {
@@ -197,6 +227,7 @@ async function bootstrapWorkspace() {
   showWorkspacePanel();
   renderHeroUser();
   await Promise.all([loadUsers(), loadOrders()]);
+  await loadNotifications({ silent: true });
   applyPermissionState();
   populateCreateUserOptions();
   populateDeliverySalesOptions();
@@ -204,14 +235,17 @@ async function bootstrapWorkspace() {
   setOrderKind(state.orderKind);
   setTrackingKind(state.trackingKind);
   ensureDefaultSection();
+  startNotificationPolling();
 }
 
 function showLoginPanel() {
   loginPanel?.classList.remove("hidden");
   workspacePanel?.classList.add("hidden");
   hideAllFeaturePanels();
+  stopNotificationPolling();
   resetLoginState();
   renderHeroUser();
+  renderNotifications();
 }
 
 function showWorkspacePanel() {
@@ -226,11 +260,7 @@ function hideAllFeaturePanels() {
 }
 
 function ensureDefaultSection() {
-  const preferredOrder = ["delivery", "create", "tracking", "tape"];
-  const nextSection = preferredOrder.find((section) => isSectionAllowed(section));
-  if (nextSection) {
-    openSection(nextSection);
-  }
+  hideAllFeaturePanels();
 }
 
 async function openSection(section) {
@@ -245,12 +275,14 @@ async function openSection(section) {
     await loadOrders();
     populateDeliveryOrders();
     autofillDeliveryForm();
+    deliveryPanel?.scrollIntoView({ behavior: "smooth", block: "start" });
     return;
   }
 
   if (section === "tape") {
     tapePanel?.classList.remove("hidden");
     await loadTapeConfig();
+    tapePanel?.scrollIntoView({ behavior: "smooth", block: "start" });
     return;
   }
 
@@ -258,6 +290,7 @@ async function openSection(section) {
     createPanel?.classList.remove("hidden");
     populateCreateUserOptions();
     setOrderKind(state.orderKind);
+    createPanel?.scrollIntoView({ behavior: "smooth", block: "start" });
     return;
   }
 
@@ -265,6 +298,7 @@ async function openSection(section) {
     trackingPanel?.classList.remove("hidden");
     await loadOrders();
     renderTrackingOrders();
+    trackingPanel?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 }
 
@@ -353,6 +387,8 @@ async function handleLogout() {
     state.currentUser = null;
     state.users = [];
     state.orders = [];
+    state.notifications = [];
+    state.notificationArchive = [];
     showLoginPanel();
     showToast("Da dang xuat.", "success");
   }
@@ -361,6 +397,7 @@ async function handleLogout() {
 function clearAuth() {
   state.authToken = "";
   state.challengeToken = "";
+  stopNotificationPolling();
   localStorage.removeItem(AUTH_STORAGE_KEY);
 }
 
@@ -391,6 +428,46 @@ async function loadOrders() {
   state.orders = Array.isArray(payload.orders) ? payload.orders : [];
   populateDeliveryOrders();
   renderTrackingOrders();
+}
+
+async function loadNotifications(options = {}) {
+  if (!state.authToken) {
+    state.notifications = [];
+    state.notificationArchive = [];
+    renderNotifications();
+    return;
+  }
+
+  try {
+    const payload = await fetchJson(notificationsUrl);
+    state.notifications = Array.isArray(payload.notifications) ? payload.notifications : [];
+    mergeNotificationArchive(state.notifications);
+    renderNotifications();
+  } catch (error) {
+    if (!options.silent) {
+      throw error;
+    }
+    state.notifications = [];
+    state.notificationArchive = loadNotificationArchive();
+    renderNotifications();
+  }
+}
+
+function startNotificationPolling() {
+  stopNotificationPolling();
+  if (!state.authToken) {
+    return;
+  }
+  notificationPollTimer = window.setInterval(() => {
+    loadNotifications({ silent: true }).catch(() => void 0);
+  }, NOTIFICATION_POLL_INTERVAL_MS);
+}
+
+function stopNotificationPolling() {
+  if (notificationPollTimer) {
+    window.clearInterval(notificationPollTimer);
+    notificationPollTimer = null;
+  }
 }
 
 async function loadTapeConfig() {
@@ -738,6 +815,143 @@ function buildOrderCardMarkup(order) {
   `;
 }
 
+function renderNotifications() {
+  if (!notificationList || !notificationCount || !notificationHistoryList || !notificationHistoryCount) {
+    return;
+  }
+
+  const visibleNotifications = state.notifications.filter((item) => {
+    if (state.notificationFilter === "unread") {
+      return !String(item?.read_at || "").trim();
+    }
+    return true;
+  });
+
+  notificationCount.textContent = String(visibleNotifications.length);
+  notificationList.innerHTML = visibleNotifications.length
+    ? visibleNotifications.map((item) => buildNotificationCardMarkup(item)).join("")
+    : '<article class="notification-empty-card">Chua co thong bao nao</article>';
+
+  notificationHistoryCount.textContent = String(state.notificationArchive.length);
+  notificationHistoryList.innerHTML = state.notificationArchive.length
+    ? state.notificationArchive.map((item) => buildNotificationCardMarkup(item, { history: true })).join("")
+    : '<article class="notification-empty-card">Chua co lich su thong bao</article>';
+
+  notificationList.querySelectorAll("[data-notification-read]").forEach((node) => {
+    node.addEventListener("click", async () => {
+      const notificationId = node.getAttribute("data-notification-read") || "";
+      if (!notificationId) {
+        return;
+      }
+      await markNotificationRead(notificationId);
+    });
+  });
+}
+
+function buildNotificationCardMarkup(item, options = {}) {
+  const isUnread = !String(item?.read_at || "").trim() && !options.history;
+  const title = String(item?.title || item?.type || "Thong bao").trim();
+  const message = String(item?.message || "").trim() || "Khong co noi dung.";
+  const dateValue = item?.created_at || item?.read_at || "";
+
+  return `
+    <article class="notification-item-card${isUnread ? " is-unread" : ""}" ${isUnread ? `data-notification-read="${escapeHtml(item?.id || "")}"` : ""}>
+      <div class="notification-item-headline">
+        <strong class="notification-item-title">${escapeHtml(title)}</strong>
+        <span class="notification-item-time">${escapeHtml(formatCompactDateTime(dateValue))}</span>
+      </div>
+      <div class="notification-item-copy">${escapeHtml(message)}</div>
+    </article>
+  `;
+}
+
+async function markNotificationRead(notificationId) {
+  const target = state.notifications.find((item) => String(item?.id || "").trim() === String(notificationId || "").trim());
+  if (!target || String(target?.read_at || "").trim()) {
+    return;
+  }
+
+  try {
+    const payload = await postJson(notificationsReadUrl, {
+      notification_id: notificationId,
+    });
+    state.notifications = Array.isArray(payload.notifications) ? payload.notifications : state.notifications;
+    mergeNotificationArchive(state.notifications);
+    renderNotifications();
+  } catch (error) {
+    showToast(error.message || "Khong the danh dau da doc.", "error");
+  }
+}
+
+async function handleMarkAllNotificationsRead() {
+  if (!state.notifications.some((item) => !String(item?.read_at || "").trim())) {
+    return;
+  }
+
+  markAllNotificationsReadButton.disabled = true;
+  try {
+    const payload = await postJson(notificationsReadAllUrl, {});
+    state.notifications = Array.isArray(payload.notifications) ? payload.notifications : [];
+    mergeNotificationArchive(state.notifications);
+    renderNotifications();
+    showToast("Da danh dau tat ca thong bao la da doc.", "success");
+  } catch (error) {
+    showToast(error.message || "Khong the cap nhat thong bao.", "error");
+  } finally {
+    markAllNotificationsReadButton.disabled = false;
+  }
+}
+
+function handleClearNotificationHistory() {
+  state.notificationArchive = [];
+  saveNotificationArchive();
+  renderNotifications();
+  showToast("Da xoa lich su thong bao.", "success");
+}
+
+function mergeNotificationArchive(items) {
+  const archive = loadNotificationArchive();
+  const map = new Map(archive.map((item) => [String(item?.id || "").trim(), item]));
+  items.forEach((item) => {
+    const key = String(item?.id || "").trim();
+    if (!key) {
+      return;
+    }
+    map.set(key, item);
+  });
+  state.notificationArchive = Array.from(map.values())
+    .sort((left, right) => String(right?.created_at || "").localeCompare(String(left?.created_at || "")))
+    .slice(0, NOTIFICATION_ARCHIVE_MAX_ITEMS);
+  saveNotificationArchive();
+}
+
+function loadNotificationArchive() {
+  const storageKey = getNotificationArchiveStorageKey();
+  if (!storageKey) {
+    return [];
+  }
+  try {
+    const raw = localStorage.getItem(storageKey);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveNotificationArchive() {
+  const storageKey = getNotificationArchiveStorageKey();
+  if (!storageKey) {
+    return;
+  }
+  localStorage.setItem(storageKey, JSON.stringify(state.notificationArchive));
+}
+
+function getNotificationArchiveStorageKey() {
+  const ownerKey = String(state.currentUser?.id || state.currentUser?.username || "").trim();
+  return ownerKey ? `${NOTIFICATION_ARCHIVE_STORAGE_PREFIX}:${ownerKey}` : "";
+}
+
 function getTransportStatus(order) {
   const normalized = String(order?.status || "").trim().toLowerCase();
   if (normalized === "completed" || order?.completed_at) {
@@ -847,6 +1061,7 @@ function applyOrderPayload(payload) {
 }
 
 function renderHeroUser() {
+  document.body.classList.toggle("telegram-authenticated", Boolean(state.currentUser));
   if (!state.currentUser) {
     heroUserName.textContent = "Chua dang nhap";
     heroUserMeta.textContent = TelegramWebApp ? "Dang mo trong Telegram" : "Dang test tren browser";
@@ -859,7 +1074,7 @@ function renderHeroUser() {
     labelDepartment(state.currentUser.department),
     labelAccessLevel(state.currentUser.policy?.max_access_level || "basic"),
   ].filter(Boolean);
-  heroUserMeta.textContent = parts.join(" • ");
+  heroUserMeta.textContent = parts.join(" | ");
 }
 
 function labelRole(role) {
@@ -910,6 +1125,28 @@ function buildUserLabel(user) {
 
 function buildDeliveryOptionLabel(order) {
   return `${order.order_id || "-"} • ${order.customer_name || "-"} • ${order.delivery_user_name || "Chua giao NV"}`;
+}
+
+function openNewChat() {
+  const chatUrl = new URL("/", window.location.origin).toString();
+  if (TelegramWebApp?.openLink) {
+    TelegramWebApp.openLink(chatUrl);
+    return;
+  }
+  window.open(chatUrl, "_blank", "noopener");
+}
+
+function formatCompactDateTime(value) {
+  const date = new Date(value);
+  if (!Number.isFinite(date.getTime())) {
+    return "-";
+  }
+  return new Intl.DateTimeFormat("vi-VN", {
+    day: "2-digit",
+    month: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
 }
 
 function formatDateTime(value) {

@@ -40,6 +40,10 @@ body {
   padding: 18px 14px 40px;
 }
 
+body.telegram-authenticated {
+  padding-top: 14px;
+}
+
 button,
 input,
 select,
@@ -58,6 +62,10 @@ button {
 .telegram-shell {
   width: min(100%, 1640px);
   margin: 0 auto;
+}
+
+body.telegram-authenticated .telegram-shell {
+  width: min(100%, 360px);
 }
 
 .hero-card,
@@ -185,10 +193,18 @@ button {
   letter-spacing: -0.03em;
 }
 
+body.telegram-authenticated .hero-card {
+  display: none;
+}
+
 .app-stack {
   display: grid;
   gap: 16px;
   margin-top: 16px;
+}
+
+body.telegram-authenticated .app-stack {
+  margin-top: 0;
 }
 
 .panel {
@@ -287,6 +303,11 @@ button {
   line-height: 1.5;
 }
 
+.panel-sidebar {
+  display: grid;
+  gap: 16px;
+}
+
 .action-grid {
   display: grid;
   gap: 12px;
@@ -294,18 +315,19 @@ button {
 
 .action-card {
   position: relative;
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: start;
-  gap: 14px;
+  display: block;
   width: 100%;
-  padding: 18px 18px 20px;
+  min-height: 58px;
+  padding: 18px 18px 18px 22px;
   text-align: left;
-  border-radius: 22px;
-  border: 1px solid transparent;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
   color: var(--text);
-  background: linear-gradient(180deg, rgba(15, 22, 31, 0.82), rgba(18, 27, 38, 0.92));
+  background: linear-gradient(180deg, rgba(34, 47, 60, 0.96), rgba(27, 38, 49, 0.96));
   transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 16px 28px rgba(0, 0, 0, 0.18);
 }
 
 .workspace-head {
@@ -326,15 +348,12 @@ button {
 .action-card::before {
   content: "";
   position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  padding: 1px;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.22), transparent 55%, rgba(255, 255, 255, 0.06));
-  -webkit-mask:
-    linear-gradient(#fff 0 0) content-box,
-    linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
+  left: 0;
+  top: 11px;
+  bottom: 11px;
+  width: 4px;
+  border-radius: 999px;
+  background: rgba(130, 216, 255, 0.88);
 }
 
 .action-card.is-disabled {
@@ -342,55 +361,61 @@ button {
 }
 
 .action-card.is-active {
-  border-color: rgba(130, 216, 255, 0.44);
+  border-color: rgba(130, 216, 255, 0.3);
   transform: translateY(-1px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 18px 30px rgba(0, 0, 0, 0.22);
 }
 
 .action-index {
-  display: inline-grid;
-  place-items: center;
-  width: 42px;
-  height: 42px;
-  border-radius: 14px;
-  border: 1px solid var(--line-strong);
-  background: rgba(6, 11, 17, 0.62);
-  color: var(--text);
-  font-size: 0.82rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
+  display: none;
 }
 
 .action-copy {
-  display: grid;
-  gap: 6px;
-  min-width: 0;
+  display: contents;
 }
 
 .accent-delivery {
-  box-shadow: inset 0 0 0 1px rgba(130, 216, 255, 0.12), 0 16px 40px rgba(73, 183, 255, 0.12);
+  border-color: rgba(143, 211, 255, 0.2);
 }
 
 .accent-tape {
-  box-shadow: inset 0 0 0 1px rgba(255, 141, 126, 0.12), 0 16px 40px rgba(255, 141, 126, 0.12);
+  border-color: rgba(255, 141, 126, 0.2);
+  background: linear-gradient(180deg, rgba(49, 40, 38, 0.96), rgba(39, 32, 31, 0.96));
 }
 
 .accent-order {
-  box-shadow: inset 0 0 0 1px rgba(127, 232, 176, 0.12), 0 16px 40px rgba(127, 232, 176, 0.12);
+  border-color: rgba(127, 232, 176, 0.2);
+  background: linear-gradient(180deg, rgba(22, 46, 43, 0.96), rgba(18, 38, 35, 0.96));
 }
 
 .accent-track {
-  box-shadow: inset 0 0 0 1px rgba(255, 191, 117, 0.12), 0 16px 40px rgba(255, 191, 117, 0.12);
+  border-color: rgba(255, 191, 117, 0.2);
+  background: linear-gradient(180deg, rgba(49, 41, 31, 0.96), rgba(40, 34, 26, 0.96));
+}
+
+.accent-tape::before {
+  background: rgba(255, 141, 126, 0.88);
+}
+
+.accent-order::before {
+  background: rgba(127, 232, 176, 0.92);
+}
+
+.accent-track::before {
+  background: rgba(255, 191, 117, 0.92);
 }
 
 .action-title {
-  font-size: 1.08rem;
+  display: block;
+  font-size: 1rem;
   font-weight: 700;
+  letter-spacing: -0.02em;
 }
 
 .action-subtitle {
-  color: var(--muted);
-  line-height: 1.45;
-  font-size: 0.92rem;
+  display: none;
 }
 
 .form-grid {
@@ -427,6 +452,161 @@ button {
   font-size: 0.78rem;
   font-weight: 700;
   white-space: nowrap;
+}
+
+.chat-launch-button {
+  min-height: 54px;
+  border-radius: 14px;
+  border: 0;
+  background: linear-gradient(180deg, rgba(247, 247, 247, 0.98), rgba(228, 228, 228, 0.94));
+  color: #111a23;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.7),
+    0 12px 26px rgba(0, 0, 0, 0.16);
+}
+
+.notification-home-card {
+  display: grid;
+  gap: 14px;
+  padding: 14px;
+  border-radius: 18px;
+  border: 1px solid rgba(143, 211, 255, 0.09);
+  background:
+    linear-gradient(180deg, rgba(10, 16, 23, 0.96), rgba(8, 13, 20, 0.98)),
+    rgba(8, 13, 20, 0.98);
+}
+
+.notification-section-head,
+.notification-history-actions,
+.notification-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.notification-section-head {
+  justify-content: space-between;
+}
+
+.notification-section-title {
+  margin: 0;
+  color: #8da4b8;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.notification-toolbar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+}
+
+.notification-filter-wrap select,
+.mini-pill-button,
+.mini-link-button,
+.mini-count-pill {
+  min-height: 36px;
+  border-radius: 12px;
+}
+
+.notification-filter-wrap select {
+  width: 100%;
+  border: 1px solid var(--line);
+  background: rgba(14, 22, 31, 0.92);
+  color: var(--text);
+  padding: 0 34px 0 12px;
+}
+
+.mini-pill-button,
+.mini-link-button {
+  border: 1px solid var(--line);
+  background: rgba(14, 22, 31, 0.92);
+  color: var(--text);
+  padding: 0 12px;
+  font-size: 0.84rem;
+}
+
+.mini-link-button {
+  min-height: auto;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  padding: 0;
+}
+
+.mini-count-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  background: rgba(14, 22, 31, 0.92);
+  color: var(--text);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.notification-list,
+.notification-history-list {
+  display: grid;
+  gap: 10px;
+}
+
+.notification-item-card,
+.notification-empty-card {
+  border-radius: 14px;
+  border: 1px solid rgba(143, 211, 255, 0.08);
+  background: rgba(10, 16, 23, 0.72);
+}
+
+.notification-item-card {
+  padding: 12px;
+  display: grid;
+  gap: 6px;
+}
+
+.notification-item-card.is-unread {
+  border-color: rgba(130, 216, 255, 0.2);
+  background: rgba(15, 24, 34, 0.86);
+}
+
+.notification-item-headline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.notification-item-title {
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.notification-item-time {
+  color: var(--muted);
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+
+.notification-item-copy {
+  color: var(--muted);
+  font-size: 0.86rem;
+  line-height: 1.5;
+}
+
+.notification-empty-card {
+  padding: 14px 12px;
+  color: #98a9b9;
+  font-size: 0.98rem;
+}
+
+.notification-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(143, 211, 255, 0.14), transparent);
 }
 
 .compact-grid {
@@ -680,6 +860,10 @@ button {
     align-items: end;
   }
 
+  body.telegram-authenticated .telegram-shell {
+    width: min(100%, 420px);
+  }
+
   .login-layout {
     grid-template-columns: minmax(240px, 0.92fr) minmax(0, 1fr);
     align-items: start;
@@ -732,6 +916,26 @@ button {
     padding: 22px;
   }
 
+  body.telegram-authenticated .telegram-shell {
+    width: min(100%, 430px);
+  }
+
+  body.telegram-authenticated .app-stack {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  body.telegram-authenticated #workspace-panel,
+  body.telegram-authenticated #delivery-panel,
+  body.telegram-authenticated #tape-panel,
+  body.telegram-authenticated #create-panel,
+  body.telegram-authenticated #tracking-panel {
+    grid-column: 1;
+    grid-row: auto;
+    position: static;
+    min-height: 0;
+  }
+
   #delivery-panel,
   #tape-panel,
   #create-panel,
@@ -743,6 +947,11 @@ button {
   .panel {
     padding: 26px 28px 30px;
     border-radius: 30px;
+  }
+
+  body.telegram-authenticated .panel {
+    padding: 18px;
+    border-radius: 20px;
   }
 
   .login-layout {
@@ -768,47 +977,25 @@ button {
   }
 
   .action-card {
-    gap: 14px;
-    min-height: 96px;
-    padding: 16px 16px 17px 18px;
+    min-height: 58px;
+    padding: 18px 18px 18px 22px;
     border-radius: 18px;
   }
 
   .action-index {
-    width: 46px;
-    height: 46px;
-    border-radius: 16px;
+    display: none;
   }
 
   .action-card::after {
-    content: "";
-    position: absolute;
-    left: 0;
-    top: 12px;
-    bottom: 12px;
-    width: 4px;
-    border-radius: 999px;
-    background: rgba(130, 216, 255, 0.65);
-  }
-
-  .accent-tape::after {
-    background: rgba(255, 141, 126, 0.8);
-  }
-
-  .accent-order::after {
-    background: rgba(127, 232, 176, 0.8);
-  }
-
-  .accent-track::after {
-    background: rgba(255, 191, 117, 0.85);
+    display: none;
   }
 
   .action-title {
-    font-size: 1.02rem;
+    font-size: 1rem;
   }
 
   .action-subtitle {
-    font-size: 0.86rem;
+    display: none;
   }
 
   .form-grid {
