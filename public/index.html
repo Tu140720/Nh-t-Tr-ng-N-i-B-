@@ -1,0 +1,1419 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <title>Trợ lý dữ liệu nội bộ</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="mobile-landscape-lock" id="mobile-landscape-lock" aria-hidden="true">
+      <div class="mobile-landscape-lock-card">
+        <strong>Xoay ngang điện thoại</strong>
+        <p>Giao diện này hiện chỉ tối ưu khi dùng điện thoại theo chiều ngang để hiển thị đủ dữ liệu như trên máy tính.</p>
+      </div>
+    </div>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="sidebar-top">
+          <div class="sidebar-group sidebar-group-user">
+            <button type="button" class="ghost-button hidden" id="open-order-products-modal">
+              Quản lý hàng hóa
+            </button>
+            <button type="button" class="ghost-button hidden" id="open-permissions-modal" style="display: none;">
+              Phân quyền người dùng
+            </button>
+            <button type="button" class="ghost-button hidden" id="open-delivery-modal">
+              Hoàn thành giao hàng
+            </button>
+            <button type="button" class="ghost-button hidden" id="open-tape-calculator-modal">
+              Bảng tính băng dính
+            </button>
+            <div class="order-cta-menu hidden" id="order-cta-menu">
+              <button type="button" class="ghost-button order-cta-button" id="open-order-menu" aria-haspopup="true" aria-expanded="false">
+                Tạo đơn
+              </button>
+              <div class="order-cta-dropdown" id="order-cta-dropdown">
+                <button type="button" class="ghost-button order-cta-option" id="open-production-order-modal">
+                  Tạo đơn sản xuất
+                </button>
+                <button type="button" class="ghost-button order-cta-option" id="open-transport-order-modal">
+                  Tạo đơn vận chuyển
+                </button>
+              </div>
+            </div>
+            <div class="orders-board-menu hidden" id="orders-board-menu">
+              <button type="button" class="ghost-button orders-board-button" id="open-orders-board-menu" aria-haspopup="true" aria-expanded="false">
+                Theo dõi đơn
+              </button>
+              <div class="orders-board-dropdown" id="orders-board-dropdown">
+                <button type="button" class="ghost-button orders-board-option" id="open-production-orders-board-modal">
+                  Theo dõi đơn sản xuất
+                </button>
+                <button type="button" class="ghost-button orders-board-option" id="open-transport-orders-board-modal">
+                  Theo dõi đơn vận chuyển
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <button type="button" class="sidebar-button" id="new-chat-button">Đoạn chat mới</button>
+        </div>
+
+        <div class="sidebar-group hidden" aria-hidden="true">
+          <div class="sidebar-head">
+            <p class="sidebar-title">Đoạn chat gần đây</p>
+            <span class="mini-pill" id="history-count">0</span>
+          </div>
+          <div class="history-list" id="history-list"></div>
+        </div>
+
+        <div class="sidebar-group">
+          <div class="sidebar-head notification-panel-head">
+            <p class="sidebar-title">Thông báo</p>
+            <div class="notification-head-actions">
+              <select id="notification-filter" aria-label="Lọc thông báo">
+                <option value="all">Tất cả</option>
+                <option value="unread">Chưa đọc</option>
+                <option value="order.assigned">Đơn mới</option>
+                <option value="delivery.complete">Giao hàng</option>
+              </select>
+              <button type="button" class="ghost-button notification-clear-button" id="mark-all-notifications-read">
+                Đã đọc hết
+              </button>
+              <span class="mini-pill" id="notification-count">0</span>
+            </div>
+          </div>
+          <div class="notification-list" id="notification-list"></div>
+          <div class="notification-history-panel">
+            <div class="sidebar-head notification-history-head">
+              <p class="sidebar-title">Lịch sử thông báo</p>
+              <div class="notification-history-actions">
+                <button type="button" class="ghost-button notification-history-clear-button" id="clear-notification-history">
+                  Xóa lịch sử
+                </button>
+                <span class="mini-pill" id="notification-history-count">0</span>
+              </div>
+            </div>
+            <div class="history-list notification-history-list" id="notification-history-list"></div>
+          </div>
+        </div>
+
+        <div class="sidebar-group">
+          <div class="sidebar-head">
+            <p class="sidebar-title">Hệ thống</p>
+          </div>
+          <div class="status-stack" id="system-status">
+            <span class="mini-pill">Đang kiểm tra...</span>
+          </div>
+        </div>
+
+        <div class="sidebar-group repo-actions">
+          <button type="button" class="accent-button" id="open-import-modal">Thêm nguồn / file</button>
+          <div class="repo-action-row">
+            <button type="button" class="ghost-button small-button repo-tab-button" id="open-dashboard-modal">
+              <span class="repo-tab-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M4.75 5.75h6.5v5.5h-6.5z"></path>
+                  <path d="M12.75 5.75h6.5v3.5h-6.5z"></path>
+                  <path d="M12.75 10.75h6.5v8.5h-6.5z"></path>
+                  <path d="M4.75 12.75h6.5v6.5h-6.5z"></path>
+                </svg>
+              </span>
+              <span class="repo-tab-label">Dashboard</span>
+            </button>
+            <button type="button" class="ghost-button small-button repo-tab-button" id="open-library-modal">
+              <span class="repo-tab-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M6.5 5.25h10.25a1.5 1.5 0 0 1 1.5 1.5v10.5a1.5 1.5 0 0 1-1.5 1.5H7.25a2.5 2.5 0 0 0-2.5 2.5V7.75a2.5 2.5 0 0 1 2.5-2.5Z"></path>
+                  <path d="M7.25 7.25h9.5"></path>
+                  <path d="M7.25 10.75h9.5"></path>
+                  <path d="M7.25 14.25h6"></path>
+                </svg>
+              </span>
+              <span class="repo-tab-label">Kho tài liệu</span>
+            </button>
+            <button type="button" class="ghost-button small-button repo-tab-button" id="open-production-library-modal">
+              <span class="repo-tab-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M4.75 18.25V9.5l7.25-4.25 7.25 4.25v8.75"></path>
+                  <path d="M8 18.25v-4.5h8v4.5"></path>
+                  <path d="M9.25 9h5.5"></path>
+                </svg>
+              </span>
+              <span class="repo-tab-label">Kho sản xuất</span>
+            </button>
+            <button type="button" class="ghost-button small-button repo-tab-button" id="open-sales-library-modal">
+              <span class="repo-tab-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M5.25 18.5h13.5"></path>
+                  <path d="M7 18.5V9.25l5-3 5 3v9.25"></path>
+                  <path d="M9.5 12.25h5"></path>
+                  <path d="M9.5 15h5"></path>
+                </svg>
+              </span>
+              <span class="repo-tab-label">Kho kinh doanh</span>
+            </button>
+            <button type="button" class="ghost-button small-button repo-tab-button" id="open-sales-products-modal">
+              <span class="repo-tab-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M6 7.25h12"></path>
+                  <path d="M6 12h12"></path>
+                  <path d="M6 16.75h12"></path>
+                  <path d="M4.75 7.25h.5"></path>
+                  <path d="M4.75 12h.5"></path>
+                  <path d="M4.75 16.75h.5"></path>
+                </svg>
+              </span>
+              <span class="repo-tab-label">Sản phẩm kinh doanh</span>
+            </button>
+            <button type="button" class="ghost-button small-button repo-tab-button hidden" id="open-users-modal">
+              <span class="repo-tab-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M16.5 19.25v-1a3.25 3.25 0 0 0-3.25-3.25h-2.5A3.25 3.25 0 0 0 7.5 18.25v1"></path>
+                  <circle cx="12" cy="8.25" r="3.25"></circle>
+                  <path d="M18.5 9.75h2.75"></path>
+                  <path d="M19.875 8.375v2.75"></path>
+                </svg>
+              </span>
+              <span class="repo-tab-label">Người dùng</span>
+            </button>
+            <button type="button" class="ghost-button small-button repo-tab-button" id="open-audit-modal">
+              <span class="repo-tab-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 6.25v6l3.75 2.25"></path>
+                  <circle cx="12" cy="12" r="7.25"></circle>
+                  <path d="M9 3.75h6"></path>
+                </svg>
+              </span>
+              <span class="repo-tab-label">Nhật ký</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="sidebar-group repo-group">
+          <div class="sidebar-head">
+            <p class="sidebar-title">Nguồn đồng bộ</p>
+            <div class="source-head-actions">
+              <button type="button" class="ghost-button sync-button hidden" id="sync-sheet-button">
+                <span class="sync-button-icon" aria-hidden="true">↻</span>
+                <span>Đồng bộ</span>
+              </button>
+              <span class="mini-pill" id="source-count-pill">0</span>
+            </div>
+          </div>
+
+          <div class="doc-list" id="source-list"></div>
+        </div>
+
+        <div class="sidebar-group repo-group">
+          <div class="sidebar-head">
+            <p class="sidebar-title">Tài liệu tải lên</p>
+            <span class="mini-pill" id="doc-count-pill">0</span>
+          </div>
+          <div class="doc-list" id="doc-list"></div>
+        </div>
+      </aside>
+
+      <main class="chat-shell">
+        <header class="chat-header">
+          <section class="user-card chat-user-panel">
+            <div class="user-card-top">
+              <div class="user-card-avatar" id="current-user-avatar" aria-hidden="true"></div>
+              <div class="user-card-main">
+                <div class="user-card-headline">
+                  <span class="user-card-name" id="current-user-name">Chưa đăng nhập</span>
+                  <span class="user-card-role" id="current-user-role">-</span>
+                </div>
+                <div class="user-card-facts" id="current-user-meta">
+                  <div class="user-fact">
+                    <span class="user-fact-label">Mã nhân viên</span>
+                    <strong class="user-fact-value">Chưa đăng nhập</strong>
+                  </div>
+                  <div class="user-fact">
+                    <span class="user-fact-label">Bộ phận</span>
+                    <strong class="user-fact-value">-</strong>
+                  </div>
+                  <div class="user-fact user-fact-wide">
+                    <span class="user-fact-label">Mức truy cập</span>
+                    <strong class="user-fact-value">-</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="user-card-actions">
+              <button type="button" class="ghost-button user-login-button hidden" id="open-login-modal">Đăng nhập</button>
+              <button type="button" class="ghost-button user-password-button" id="open-password-modal">Đổi mật khẩu</button>
+              <button type="button" class="ghost-button user-logout-button" id="logout-button">Đăng xuất</button>
+            </div>
+          </section>
+          <div class="chat-filters-panel">
+            <div class="chat-filters">
+              <label class="chat-filter">
+                <span>Mức</span>
+                <select id="ask-access-filter">
+                  <option value="">Trong quyền của tôi</option>
+                  <option value="basic">Cơ bản</option>
+                  <option value="advanced">Nâng cao</option>
+                  <option value="sensitive">Cá nhân</option>
+                </select>
+              </label>
+              <label class="chat-filter">
+                <span>Thư mục</span>
+                <select id="ask-folder-filter">
+                  <option value="">Trong quyền của tôi</option>
+                </select>
+              </label>
+            </div>
+            <p class="helper-text chat-filter-hint" id="ask-filter-hint">
+              Chọn mức trước để chỉ tìm trong đúng nhóm tài liệu tương ứng.
+            </p>
+          </div>
+        </header>
+
+        <section class="chat-thread" id="chat-thread">
+          <div class="empty-state" id="empty-state">
+            <p class="empty-kicker">Sẵn sàng trả lời</p>
+            <h2>Ưu tiên dữ liệu nội bộ, cần thì mới tìm trên Internet</h2>
+            <p class="empty-copy">
+              Nhập câu hỏi ở thanh bên dưới. Câu trả lời sẽ hiển thị theo dạng hội thoại, kèm
+              nội dung trả lời và nguồn tham khảo.
+            </p>
+          </div>
+        </section>
+
+        <footer class="composer-wrap">
+          <form id="ask-form" class="composer">
+            <div class="drop-hint hidden" id="drop-hint">Thả ảnh vào đây để đính kèm</div>
+            <div class="composer-attachments hidden" id="composer-attachments">
+              <div class="image-chip">
+                <img id="pasted-image-preview" alt="Ảnh đã dán" />
+                <div class="image-chip-meta">
+                  <p id="pasted-image-name">Ảnh đã dán</p>
+                  <small id="pasted-image-size"></small>
+                </div>
+                <button
+                  type="button"
+                  class="icon-button image-chip-remove"
+                  id="remove-pasted-image"
+                  aria-label="Xóa ảnh"
+                >
+                  ×
+                </button>
+              </div>
+              <div class="ocr-preview hidden" id="ocr-preview">
+                <div class="ocr-preview-head">
+                  <p>Văn bản trích từ ảnh</p>
+                  <button type="button" class="ghost-button small-button" id="refresh-ocr-button">
+                    Đọc lại
+                  </button>
+                </div>
+                <div class="ocr-preview-body" id="ocr-preview-body"></div>
+              </div>
+              <div class="ocr-decision hidden" id="ocr-decision">
+                <p>Bạn có muốn đọc thông tin trong ảnh không?</p>
+                <div class="ocr-decision-actions">
+                  <button type="button" class="ghost-button small-button" id="skip-ocr-button">
+                    Không đọc
+                  </button>
+                  <button type="button" class="accent-button small-button" id="confirm-ocr-button">
+                    Đọc ảnh
+                  </button>
+                </div>
+              </div>
+            </div>
+            <textarea id="question-input" name="question" rows="1" placeholder="Hỏi bất kỳ điều gì"></textarea>
+            <div class="composer-actions">
+              <button type="submit" class="send-button" id="submit-button">Gửi</button>
+            </div>
+          </form>
+        </footer>
+      </main>
+    </div>
+
+    <div class="modal-backdrop hidden" id="import-modal-backdrop"></div>
+    <section class="import-modal hidden" id="import-modal" aria-hidden="true">
+      <div class="modal-head">
+        <div>
+          <p class="sidebar-title">Thêm dữ liệu</p>
+          <h2>Tạo nguồn đồng bộ hoặc tải file tĩnh</h2>
+        </div>
+        <button type="button" class="icon-button" id="close-import-modal" aria-label="Đóng">×</button>
+      </div>
+
+      <div class="import-tabs">
+        <button type="button" class="tab-button active" data-mode="file">Tải file</button>
+        <button type="button" class="tab-button" data-mode="sheet">Nguồn đồng bộ</button>
+      </div>
+
+      <form id="import-form" class="import-form">
+        <label class="field">
+          <span>Tiêu đề tài liệu</span>
+          <input id="import-title" name="title" type="text" placeholder="Ví dụ: Chính sách nghỉ phép" />
+        </label>
+
+        <div class="metadata-grid">
+          <label class="field">
+            <span>Bộ phận phụ trách</span>
+            <input id="import-owner" name="owner" type="text" placeholder="Ví dụ: Kinh doanh" />
+          </label>
+          <label class="field">
+            <span>Trạng thái</span>
+            <select id="import-status" name="status">
+              <option value="active">Đang áp dụng</option>
+              <option value="draft">Bản nháp</option>
+              <option value="superseded">Đã thay thế</option>
+            </select>
+          </label>
+        </div>
+
+        <label class="field">
+          <span>Khóa chủ đề</span>
+          <input id="import-topic-key" name="topic_key" type="text" placeholder="Ví dụ: bang-gia-npp" />
+        </label>
+
+        <div class="metadata-grid">
+          <label class="field">
+            <span>Mức lưu trữ</span>
+            <select id="import-storage-level" name="storage_level">
+              <option value="basic">Cơ bản</option>
+              <option value="advanced">Nâng cao</option>
+              <option value="sensitive">Cá nhân</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>Thư mục lưu</span>
+            <select id="import-folder" name="storage_folder_key"></select>
+          </label>
+        </div>
+        <label class="field hidden" id="import-custom-folder-field">
+          <span>Tên thư mục mới</span>
+          <input id="import-custom-folder" name="custom_folder_name" type="text" placeholder="Ví dụ: Kho chung miền Bắc" />
+        </label>
+
+        <label class="field hidden" id="private-share-panel">
+          <span>Chia sẻ với ai</span>
+          <div class="share-user-list" id="private-share-list"></div>
+          <p class="helper-text">
+            Nếu không chọn ai, chỉ người tải lên mới xem và tra cứu được. Admin cũng không có quyền truy cập.
+          </p>
+        </label>
+
+        <div id="file-import-panel" class="import-panel">
+          <label class="field">
+            <span>Chọn file</span>
+            <input id="import-file" name="file" type="file" accept=".md,.txt,.json,.csv,.docx,.xlsx,.pptx" />
+          </label>
+          <p class="helper-text">Hỗ trợ `.md`, `.txt`, `.json`, `.csv`, `.docx`, `.xlsx`, `.pptx`.</p>
+        </div>
+
+        <div id="sheet-import-panel" class="import-panel hidden">
+          <label class="field">
+            <span>Link Google Sheet</span>
+            <input
+              id="import-sheet-url"
+              name="sheetUrl"
+              type="url"
+              placeholder="https://docs.google.com/spreadsheets/d/..."
+            />
+          </label>
+          <p class="helper-text">
+            Nguồn này sẽ được lưu riêng. Nút Đồng bộ chỉ quét danh sách link ở đây.
+          </p>
+          <div class="sheet-check">
+            <button type="button" class="ghost-button small-button" id="check-sheet-button">Kiểm tra link</button>
+            <div class="sheet-check-result hidden" id="sheet-check-result"></div>
+          </div>
+        </div>
+
+        <div class="import-actions">
+          <button type="button" class="ghost-button" id="cancel-import-button">Hủy</button>
+          <button type="submit" class="accent-button" id="confirm-import-button">Lưu</button>
+        </div>
+      </form>
+    </section>
+
+    <div class="modal-backdrop hidden" id="permissions-modal-backdrop"></div>
+    <section class="import-modal hidden" id="permissions-modal" aria-hidden="true">
+      <div class="modal-head">
+        <div>
+          <p class="sidebar-title">Người dùng</p>
+          <h2>Quản lý tài khoản nội bộ</h2>
+        </div>
+        <button type="button" class="icon-button" id="close-permissions-modal" aria-label="Đóng">×</button>
+      </div>
+
+      <div class="permission-toolbar">
+        <label class="field permission-search hidden" aria-hidden="true">
+          <span>Chọn tài khoản</span>
+          <select id="permissions-user-select">
+            <option value="">Chọn nhân viên cần xem</option>
+          </select>
+        </label>
+        <button type="button" class="accent-button" id="create-user-button">Thêm tài khoản</button>
+      </div>
+
+      <label class="field permission-search permission-search-inline">
+        <span>TÃ¬m nhanh</span>
+        <input type="search" id="permissions-user-search" placeholder="TÃªn, tÃ i khoáº£n, mÃ£ NV, bá»™ pháº­n..." />
+      </label>
+
+      <div class="import-form" id="permissions-list"></div>
+
+      <div class="import-actions">
+        <button type="button" class="ghost-button" id="close-permissions-button">Đóng</button>
+      </div>
+    </section>
+
+    <div class="modal-backdrop hidden" id="password-modal-backdrop"></div>
+    <section class="import-modal hidden" id="password-modal" aria-hidden="true">
+      <div class="modal-head">
+        <div>
+          <p class="sidebar-title">Bảo mật</p>
+          <h2>Đổi mật khẩu</h2>
+        </div>
+        <button type="button" class="icon-button" id="close-password-modal" aria-label="Đóng">×</button>
+      </div>
+
+      <form id="password-form" class="import-form">
+        <label class="field">
+          <span>Mật khẩu hiện tại</span>
+          <input id="current-password" name="current_password" type="password" placeholder="Nhập mật khẩu hiện tại" />
+        </label>
+        <label class="field">
+          <span>Mật khẩu mới</span>
+          <input id="new-password" name="new_password" type="password" placeholder="Ít nhất 6 ký tự" />
+        </label>
+        <label class="field">
+          <span>Nhập lại mật khẩu mới</span>
+          <input id="confirm-password" name="confirm_password" type="password" placeholder="Nhập lại mật khẩu mới" />
+        </label>
+        <div class="import-actions">
+          <button type="button" class="ghost-button" id="cancel-password-button">Hủy</button>
+          <button type="submit" class="accent-button" id="confirm-password-button">Lưu mật khẩu</button>
+        </div>
+      </form>
+    </section>
+
+    <div class="modal-backdrop hidden" id="library-modal-backdrop"></div>
+    <section class="import-modal hidden" id="library-modal" aria-hidden="true">
+      <div class="modal-head">
+        <div>
+          <p class="sidebar-title" id="library-modal-kicker">Kho tài liệu</p>
+          <h2 id="library-modal-title">Quản lý tài liệu nội bộ</h2>
+        </div>
+        <button type="button" class="icon-button" id="close-library-modal" aria-label="Đóng">×</button>
+      </div>
+
+      <div class="library-toolbar" id="library-toolbar">
+        <label class="field">
+          <span>Tìm nhanh</span>
+          <input id="library-search" type="text" placeholder="Tên tài liệu, thư mục, người tải..." />
+        </label>
+        <label class="field">
+          <span>Mức truy cập</span>
+          <select id="library-access-filter">
+            <option value="">Trong quyền của tôi</option>
+            <option value="basic">Cơ bản</option>
+            <option value="advanced">Nâng cao</option>
+            <option value="sensitive">Cá nhân</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>Thư mục</span>
+          <select id="library-folder-filter">
+            <option value="">Trong quyền của tôi</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>Trạng thái</span>
+          <select id="library-status-filter">
+            <option value="">Tất cả</option>
+            <option value="draft">Chờ duyệt</option>
+            <option value="active">Đã duyệt</option>
+            <option value="rejected">Đã từ chối</option>
+          </select>
+        </label>
+      </div>
+      <p class="helper-text library-filter-hint" id="library-filter-hint">
+        Chọn mức truy cập để thư mục và kết quả chỉ hiển thị trong đúng phạm vi được phép dùng.
+      </p>
+
+      <section class="production-stock-panel hidden" id="production-stock-panel" aria-hidden="true">
+        <div class="production-stock-head">
+          <div>
+            <p class="sidebar-title">Kho sản xuất</p>
+            <h3>Tồn thành phẩm đã hoàn tất</h3>
+          </div>
+          <div class="production-stock-actions">
+            <label class="production-stock-mode">
+              <span>Xem</span>
+              <select id="production-stock-view-mode">
+                <option value="summary">Tổng hợp</option>
+                <option value="day">Theo ngày</option>
+                <option value="month">Theo tháng</option>
+              </select>
+            </label>
+            <span class="mini-pill" id="production-stock-count">0</span>
+          </div>
+        </div>
+        <p class="helper-text production-stock-hint" id="production-stock-hint">
+          Dữ liệu được cộng dồn từ các phiếu sản xuất đã hoàn tất nhận hàng.
+        </p>
+        <div class="library-table-wrap production-stock-table-wrap">
+          <table class="library-table production-stock-table">
+            <thead id="production-stock-head"></thead>
+            <tbody id="production-stock-body"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="production-stock-panel sales-stock-panel hidden" id="sales-stock-panel" aria-hidden="true">
+        <div class="production-stock-head">
+          <div>
+            <p class="sidebar-title">Kho kinh doanh</p>
+            <h3>Hàng hóa nhập ngoài đang quản lí</h3>
+          </div>
+          <div class="production-stock-actions">
+            <label class="production-stock-mode">
+              <span>Xem</span>
+              <select id="sales-stock-view-mode">
+                <option value="summary">Tổng hợp</option>
+                <option value="day">Theo ngày</option>
+                <option value="month">Theo tháng</option>
+              </select>
+            </label>
+            <span class="mini-pill" id="sales-stock-count">0</span>
+          </div>
+        </div>
+        <p class="helper-text production-stock-hint" id="sales-stock-hint">
+          Hàng hóa được cộng từ các lần nhập kho ngoài và trừ khi tạo đơn giao hàng.
+        </p>
+        <form class="sales-stock-receive-form hidden" id="sales-stock-receive-form">
+          <label class="field">
+            <span>Mã hàng</span>
+            <input id="sales-stock-code" type="text" placeholder="Ví dụ: MBK25" />
+          </label>
+          <label class="field">
+            <span>Tên hàng hóa</span>
+            <input id="sales-stock-name" type="text" placeholder="Ví dụ: Màng bọt khí 25cm" required />
+          </label>
+          <label class="field">
+            <span>ĐVT</span>
+            <input id="sales-stock-unit" type="text" placeholder="Cuộn, cây..." value="cuộn" required />
+          </label>
+          <label class="field">
+            <span>Số lượng nhập</span>
+            <input id="sales-stock-quantity" type="number" min="0" step="1" placeholder="0" required />
+          </label>
+          <label class="field">
+            <span>Nhà cung cấp</span>
+            <input id="sales-stock-supplier" type="text" placeholder="Nhập tên nhà cung cấp" />
+          </label>
+          <label class="field">
+            <span>Ngày nhập</span>
+            <input id="sales-stock-received-at" type="datetime-local" />
+          </label>
+          <label class="field sales-stock-note-field">
+            <span>Ghi chú</span>
+            <input id="sales-stock-note" type="text" placeholder="Ghi chú thêm nếu cần" />
+          </label>
+          <div class="sales-stock-receive-actions">
+            <button type="submit" class="accent-button" id="sales-stock-receive-button">Nhập hàng vào kho</button>
+            <button type="button" class="ghost-button hidden" id="sales-stock-transfer-toggle">Nhập hàng từ kho sản xuất</button>
+          </div>
+        </form>
+        <section class="sales-stock-transfer-panel hidden" id="sales-stock-transfer-panel" aria-hidden="true">
+          <div class="sales-stock-transfer-head">
+            <div>
+              <p class="sidebar-title">Kho sản xuất</p>
+              <h4>Chọn hàng đang có để chuyển sang kho kinh doanh</h4>
+            </div>
+          </div>
+          <div class="sales-stock-transfer-controls">
+            <label class="field">
+              <span>Ngày giờ nhập kho</span>
+              <input id="sales-stock-transfer-at" type="datetime-local" />
+            </label>
+            <label class="field sales-stock-transfer-note-field">
+              <span>Ghi chú</span>
+              <input id="sales-stock-transfer-note" type="text" placeholder="Ghi chú cho lần chuyển kho này" />
+            </label>
+          </div>
+          <div class="sales-stock-transfer-list" id="sales-stock-transfer-list"></div>
+          <div class="sales-stock-transfer-actions">
+            <button type="button" class="accent-button" id="sales-stock-transfer-confirm">Xác nhận nhập từ kho sản xuất</button>
+          </div>
+        </section>
+        <div class="library-table-wrap production-stock-table-wrap">
+          <table class="library-table production-stock-table sales-stock-table">
+            <thead id="sales-stock-head"></thead>
+            <tbody id="sales-stock-body"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <div class="library-table-wrap" id="library-documents-wrap">
+        <table class="library-table">
+          <thead>
+            <tr>
+              <th>Tài liệu</th>
+              <th>Thư mục</th>
+              <th>Ngày tải</th>
+              <th>Quyền</th>
+              <th>Người tải</th>
+              <th>Thao tác</th>
+            </tr>
+          </thead>
+          <tbody id="library-table-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <div class="modal-backdrop hidden" id="document-viewer-backdrop"></div>
+    <section class="import-modal hidden" id="document-viewer-modal" aria-hidden="true">
+      <div class="modal-head">
+        <div>
+          <p class="sidebar-title">Chi tiết tài liệu</p>
+          <h2 id="document-viewer-title">Tài liệu</h2>
+        </div>
+        <button type="button" class="icon-button" id="close-document-viewer" aria-label="Đóng">×</button>
+      </div>
+      <div class="document-viewer-meta" id="document-viewer-meta"></div>
+      <div class="document-viewer-body" id="document-viewer-body"></div>
+      <div class="import-actions">
+        <button type="button" class="ghost-button" id="close-document-viewer-button">Đóng</button>
+      </div>
+    </section>
+
+    <div class="modal-backdrop hidden" id="audit-modal-backdrop"></div>
+    <section class="import-modal hidden" id="audit-modal" aria-hidden="true">
+      <div class="modal-head">
+        <div>
+          <p class="sidebar-title">Nhật ký</p>
+          <h2>Hoạt động hệ thống</h2>
+        </div>
+        <button type="button" class="icon-button" id="close-audit-modal" aria-label="Đóng">×</button>
+      </div>
+      <div class="audit-log-list" id="audit-log-list"></div>
+    </section>
+
+    <div class="modal-backdrop hidden" id="dashboard-modal-backdrop"></div>
+    <section class="import-modal hidden" id="dashboard-modal" aria-hidden="true">
+      <div class="modal-head">
+        <div>
+          <p class="sidebar-title">Dashboard</p>
+          <h2>Tổng quan quản trị</h2>
+        </div>
+        <button type="button" class="icon-button" id="close-dashboard-modal" aria-label="Đóng">×</button>
+      </div>
+      <div class="dashboard-grid" id="dashboard-stats-grid"></div>
+      <div class="dashboard-columns">
+        <section class="dashboard-panel">
+          <div class="dashboard-panel-head">
+            <h3>Folder nổi bật</h3>
+          </div>
+          <div class="dashboard-list" id="dashboard-folders"></div>
+        </section>
+        <section class="dashboard-panel">
+          <div class="dashboard-panel-head">
+            <h3>Người tải nhiều</h3>
+          </div>
+          <div class="dashboard-list" id="dashboard-uploaders"></div>
+        </section>
+      </div>
+      <section class="dashboard-panel">
+        <div class="dashboard-panel-head">
+          <h3>Hoạt động gần đây</h3>
+        </div>
+        <div class="dashboard-list" id="dashboard-actions"></div>
+      </section>
+    </section>
+
+    <div class="modal-backdrop hidden" id="share-modal-backdrop"></div>
+    <section class="import-modal hidden" id="share-modal" aria-hidden="true">
+      <div class="modal-head">
+        <div>
+          <p class="sidebar-title">Chia sẻ riêng tư</p>
+          <h2 id="share-modal-title">Cập nhật quyền xem tài liệu</h2>
+        </div>
+        <button type="button" class="icon-button" id="close-share-modal" aria-label="Đóng">×</button>
+      </div>
+      <div class="field">
+        <span>Chủ sở hữu</span>
+        <select id="share-owner-select"></select>
+      </div>
+      <label class="field">
+        <span>Tìm người dùng</span>
+        <input id="share-user-search" type="text" placeholder="Tên, mã nhân viên hoặc tài khoản" />
+      </label>
+      <div class="share-user-list share-modal-list" id="share-modal-user-list"></div>
+      <div class="import-actions">
+        <button type="button" class="ghost-button" id="cancel-share-modal">Hủy</button>
+        <button type="button" class="accent-button" id="confirm-share-modal">Lưu quyền</button>
+      </div>
+    </section>
+
+    <div class="modal-backdrop hidden" id="delivery-modal-backdrop"></div>
+    <section class="import-modal hidden" id="delivery-modal" aria-hidden="true">
+      <div class="modal-head">
+        <div>
+          <p class="sidebar-title">Vận chuyển</p>
+          <h2>Xác nhận hoàn thành giao hàng</h2>
+        </div>
+        <button type="button" class="icon-button" id="close-delivery-modal" aria-label="Đóng">×</button>
+      </div>
+      <form class="import-form" id="delivery-form">
+        <label class="field">
+          <span>Chọn đơn cần giao</span>
+          <select id="delivery-order-id" name="order_id" required></select>
+        </label>
+        <label class="field">
+          <span>Khách hàng</span>
+          <input id="delivery-customer-name" name="customer_name" type="text" placeholder="Tên khách hàng / đại lý" required readonly />
+        </label>
+        <label class="field">
+          <span>Địa chỉ giao hàng</span>
+          <textarea id="delivery-address" name="delivery_address" rows="3" placeholder="Địa chỉ sẽ tự điền theo đơn đã chọn" readonly></textarea>
+        </label>
+        <label class="field">
+          <span>Nhân viên kinh doanh phụ trách</span>
+          <select id="delivery-sales-user" name="sales_user_id" required></select>
+        </label>
+        <label class="field">
+          <span>Kết quả giao</span>
+          <select id="delivery-result-status" name="result_status">
+            <option value="delivered">Giao thành công</option>
+            <option value="partial">Giao một phần</option>
+            <option value="rescheduled">Khách hẹn lại</option>
+            <option value="failed">Không giao được</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>Thời gian hoàn thành</span>
+          <input id="delivery-completed-at" name="completed_at" type="datetime-local" required />
+        </label>
+        <label class="field">
+          <span>Khách đã thanh toán chưa?</span>
+          <select id="delivery-payment-status" name="payment_status">
+            <option value="unpaid">Chưa thanh toán</option>
+            <option value="paid">Đã thanh toán</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>Hình thức thanh toán</span>
+          <select id="delivery-payment-method" name="payment_method">
+            <option value="">Chưa xác định</option>
+            <option value="cash">Tiền mặt</option>
+            <option value="bank_transfer">Chuyển khoản</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>Ghi chú giao hàng</span>
+          <textarea id="delivery-note" name="note" rows="4" placeholder="Biên nhận, tình trạng giao, lưu ý cho NVKD..."></textarea>
+        </label>
+        <div class="import-actions">
+          <button type="button" class="ghost-button" id="cancel-delivery-modal">Hủy</button>
+          <button type="submit" class="accent-button" id="confirm-delivery-button">Xác nhận hoàn thành</button>
+        </div>
+      </form>
+    </section>
+
+    <div class="modal-backdrop hidden" id="orders-board-modal-backdrop"></div>
+    <section class="import-modal hidden" id="orders-board-modal" aria-hidden="true">
+      <div class="modal-head">
+        <div>
+          <p class="sidebar-title">Đơn hàng</p>
+          <h2 id="orders-board-title">Theo dõi tất cả đơn đã tạo</h2>
+        </div>
+        <button type="button" class="icon-button" id="close-orders-board-modal" aria-label="Đóng">×</button>
+      </div>
+      <div class="library-toolbar orders-toolbar">
+        <label class="field">
+          <span>Tìm đơn</span>
+          <input id="orders-search" type="text" placeholder="Mã đơn, khách hàng, NVKD, NVGH" />
+        </label>
+        <label class="field">
+          <span>Từ ngày</span>
+          <input id="orders-date-from-filter" type="date" />
+        </label>
+        <label class="field">
+          <span>Đến ngày</span>
+          <input id="orders-date-to-filter" type="date" />
+        </label>
+        <label class="field">
+          <span id="orders-status-filter-label">Trạng thái giao</span>
+          <select id="orders-status-filter">
+            <option value="">Tất cả</option>
+            <option value="assigned">Chưa giao</option>
+            <option value="completed">Đã giao</option>
+          </select>
+        </label>
+        <label class="field" id="orders-payment-filter-field">
+          <span>Thanh toán</span>
+          <select id="orders-payment-filter">
+            <option value="">Tất cả</option>
+            <option value="paid">Đã thanh toán</option>
+            <option value="unpaid">Chưa thanh toán</option>
+          </select>
+        </label>
+      </div>
+      <div class="library-table-wrap">
+        <table class="library-table orders-table">
+          <thead>
+            <tr>
+              <th>Đơn hàng</th>
+              <th>Nhân viên kinh doanh</th>
+              <th id="orders-assignee-heading">NV giao</th>
+              <th id="orders-production-status-heading" class="orders-production-only hidden">Trạng thái SX</th>
+              <th id="orders-delivery-heading">Giao hàng</th>
+              <th id="orders-payment-heading">Thanh toán</th>
+              <th>Hình thức</th>
+            </tr>
+          </thead>
+          <tbody id="orders-table-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <div class="modal-backdrop hidden" id="order-details-modal-backdrop"></div>
+    <section class="import-modal hidden" id="order-details-modal" aria-hidden="true">
+      <div class="modal-head">
+        <div>
+          <p class="sidebar-title">Đơn hàng</p>
+          <h2>Chi tiết đơn hàng</h2>
+        </div>
+        <button type="button" class="icon-button" id="close-order-details-modal" aria-label="Đóng">×</button>
+      </div>
+      <div class="import-form order-details-layout">
+        <label class="field">
+          <span>Mã đơn hàng</span>
+          <input id="order-details-id" type="text" readonly />
+        </label>
+        <label class="field">
+          <span>Khách hàng</span>
+          <input id="order-details-customer-name" type="text" readonly />
+        </label>
+        <label class="field">
+          <span>NVKD phụ trách</span>
+          <input id="order-details-sales-user" type="text" readonly />
+        </label>
+        <label class="field">
+          <span>NV giao hàng</span>
+          <input id="order-details-delivery-user" type="text" readonly />
+        </label>
+        <label class="field">
+          <span>Người tạo đơn</span>
+          <input id="order-details-created-by" type="text" readonly />
+        </label>
+        <label class="field">
+          <span>Ngày tạo đơn</span>
+          <input id="order-details-created-at" type="text" readonly />
+        </label>
+        <label class="field">
+          <span>Ngày cần giao</span>
+          <input id="order-details-planned-at" type="text" readonly />
+        </label>
+        <label class="field">
+          <span>Trạng thái giao</span>
+          <input id="order-details-status" type="text" readonly />
+        </label>
+        <label class="field">
+          <span>Hoàn thành giao</span>
+          <input id="order-details-completed-at" type="text" readonly />
+        </label>
+        <label class="field">
+          <span>Thanh toán</span>
+          <input id="order-details-payment-status" type="text" readonly />
+        </label>
+        <label class="field">
+          <span>Hình thức thanh toán</span>
+          <input id="order-details-payment-method" type="text" readonly />
+        </label>
+        <label class="field order-details-wide">
+          <span>Địa chỉ giao hàng</span>
+          <textarea id="order-details-address" rows="3" readonly></textarea>
+        </label>
+        <label class="field order-details-wide">
+          <span>Thông tin hàng hóa</span>
+          <div class="order-details-items-panel">
+            <div class="order-item-row order-item-row-head" aria-hidden="true">
+              <span>STT</span>
+              <span>Hàng hóa</span>
+              <span>Số lượng</span>
+              <span>Đơn vị</span>
+              <span>Đơn giá</span>
+            </div>
+            <div id="order-details-items-list"></div>
+            <div class="order-items-empty hidden" id="order-details-items-empty">Chưa cập nhật thông tin hàng hóa cho đơn này.</div>
+            <div class="order-total-card order-details-total-card">
+              <label class="field">
+                <span>Tổng giá trị đơn hàng</span>
+                <input id="order-details-value" type="text" readonly />
+              </label>
+              <p class="order-total-display" id="order-details-total-display">0 ₫</p>
+            </div>
+          </div>
+        </label>
+        <label class="field order-details-wide">
+          <span>Ghi chú</span>
+          <textarea id="order-details-note" rows="4" readonly></textarea>
+        </label>
+        <div class="import-actions">
+          <button type="button" class="ghost-button" id="print-order-details-button">In phiếu</button>
+          <button type="button" class="ghost-button" id="export-order-details-button">Xuất file</button>
+          <button type="button" class="ghost-button" id="close-order-details-button">Đóng</button>
+        </div>
+      </div>
+    </section>
+
+    <div class="modal-backdrop hidden" id="order-edit-modal-backdrop"></div>
+    <section class="import-modal hidden" id="order-edit-modal" aria-hidden="true">
+      <div class="modal-head">
+        <div>
+          <p class="sidebar-title">Đơn hàng</p>
+          <h2>Chỉnh sửa đơn hàng</h2>
+        </div>
+        <button type="button" class="icon-button" id="close-order-edit-modal" aria-label="Đóng">×</button>
+      </div>
+      <form class="import-form" id="order-edit-form">
+        <label class="field">
+          <span>Mã đơn hàng</span>
+          <input id="order-edit-id" type="text" readonly />
+        </label>
+        <label class="field">
+          <span>Khách hàng</span>
+          <input id="order-edit-customer-name" type="text" required />
+        </label>
+        <label class="field">
+          <span>Địa chỉ giao hàng</span>
+          <textarea id="order-edit-address" rows="3"></textarea>
+        </label>
+        <label class="field">
+          <span>Đơn hàng gồm những gì?</span>
+          <textarea id="order-edit-items" rows="3"></textarea>
+        </label>
+        <label class="field">
+          <span>Giá trị đơn hàng</span>
+          <input id="order-edit-value" type="number" min="0" step="1000" />
+        </label>
+        <label class="field">
+          <span>Khách đã thanh toán chưa?</span>
+          <select id="order-edit-payment-status">
+            <option value="unpaid">Chưa thanh toán</option>
+            <option value="paid">Đã thanh toán</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>Hình thức thanh toán</span>
+          <select id="order-edit-payment-method">
+            <option value="">Chưa xác định</option>
+            <option value="cash">Tiền mặt</option>
+            <option value="bank_transfer">Chuyển khoản</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>Ghi chú</span>
+          <textarea id="order-edit-note" rows="4"></textarea>
+        </label>
+        <div class="import-actions">
+          <button type="button" class="ghost-button" id="cancel-order-edit-modal">Hủy</button>
+          <button type="submit" class="accent-button" id="confirm-order-edit-button">Lưu cập nhật</button>
+        </div>
+      </form>
+    </section>
+
+    <div class="modal-backdrop hidden" id="order-products-modal-backdrop"></div>
+    <section class="import-modal hidden" id="order-products-modal" aria-hidden="true">
+      <div class="modal-head">
+        <div>
+          <p class="sidebar-title">Danh mục</p>
+          <h2>Quản lý hàng hóa</h2>
+        </div>
+        <button type="button" class="icon-button" id="close-order-products-modal" aria-label="Đóng">×</button>
+      </div>
+      <div class="import-form">
+        <div class="order-products-toolbar">
+          <button type="button" class="ghost-button" id="add-order-product-button">+ Thêm hàng hóa</button>
+        </div>
+        <div class="order-product-editor-row order-product-editor-head" aria-hidden="true">
+          <span>STT</span>
+          <span>Mã hàng hóa</span>
+          <span>Tên hàng hóa</span>
+          <span>Các đơn vị</span>
+          <span>Đơn vị mặc định</span>
+          <span>Thao tác</span>
+        </div>
+        <div class="order-products-list" id="order-products-list"></div>
+        <div class="import-actions">
+          <button type="button" class="ghost-button" id="cancel-order-products-modal">Hủy</button>
+          <button type="button" class="accent-button" id="save-order-products-button">Lưu danh mục</button>
+        </div>
+      </div>
+    </section>
+
+    <div class="modal-backdrop hidden" id="order-modal-backdrop"></div>
+    <section class="import-modal hidden" id="order-modal" aria-hidden="true">
+      <div class="modal-head">
+        <div>
+          <p class="sidebar-title">Điều phối</p>
+          <h2>Tạo đơn hàng mới</h2>
+        </div>
+        <button type="button" class="icon-button" id="close-order-modal" aria-label="Đóng">×</button>
+      </div>
+      <form class="import-form order-form-layout" id="order-form" novalidate>
+        <section class="production-order-sheet hidden" id="production-order-sheet">
+          <div class="production-completion-stamp hidden" id="production-completion-stamp" aria-hidden="true">
+            <span>ORDER COMPLETED</span>
+          </div>
+          <div class="production-sheet-header">
+            <p class="production-sheet-title">PHIẾU ĐỀ NGHỊ SẢN XUẤT THEO ĐƠN ĐẶT HÀNG</p>
+            <label class="production-sheet-order-ref">
+              <span>Đơn đặt hàng số</span>
+              <div class="prefixed-input">
+                <span>DH</span>
+                <input id="production-order-id" name="production_order_id" type="text" inputmode="numeric" placeholder="" required />
+              </div>
+            </label>
+          </div>
+
+          <div class="production-sheet-meta">
+            <label class="field">
+              <span>Khách hàng</span>
+              <input id="production-customer-name" name="production_customer_name" type="text" placeholder="Tên khách hàng / đại lý" required />
+            </label>
+            <label class="field" id="production-requester-field">
+              <span>Người yêu cầu</span>
+              <select id="production-requester" name="production_requester" required></select>
+            </label>
+            <label class="field">
+              <span>Thời gian tạo phiếu</span>
+              <input id="production-created-at" type="text" readonly />
+            </label>
+          </div>
+
+          <div class="production-sheet-table">
+            <div class="production-sheet-table-head" aria-hidden="true">
+              <span class="head-cell head-cell-tall head-stt">STT</span>
+              <span class="head-cell head-cell-tall head-code">Mã hàng hóa</span>
+              <span class="head-cell head-cell-tall head-name">Tên hàng hóa</span>
+              <span class="head-cell head-cell-tall head-norm">Định mức thực</span>
+              <span class="head-cell head-cell-tall head-unit">DVT</span>
+              <span class="head-cell head-cell-tall head-qty">SL</span>
+              <span class="head-cell head-cell-group head-status">Tình trạng</span>
+              <span class="head-cell head-cell-tall head-team">Tổ máy</span>
+              <span class="head-cell head-cell-sub head-done">Đã SX</span>
+              <span class="head-cell head-cell-sub head-missing">Thiếu</span>
+              <span class="head-cell head-cell-sub head-extra">Dư</span>
+            </div>
+            <div id="production-order-items-list"></div>
+            <div class="order-items-empty" id="production-order-items-empty">Chưa có dòng hàng hóa sản xuất. Bấm thêm để tạo dòng đầu tiên.</div>
+          </div>
+          <button type="button" class="ghost-button order-add-item-button production-add-item-button" id="production-add-item-button">+ Thêm dòng sản xuất</button>
+
+          <label class="field">
+            <span>Ghi chú</span>
+            <textarea id="production-note" rows="3" placeholder="Kho sản xuất, vật tư, lưu ý cho sản xuất..."></textarea>
+          </label>
+
+          <fieldset class="production-turnaround">
+            <legend>Đề nghị trả hàng trong</legend>
+            <label><input type="radio" name="production-turnaround" value="24H" /> 24H</label>
+            <label><input type="radio" name="production-turnaround" value="48H" /> 48H</label>
+            <label><input type="radio" name="production-turnaround" value="72H" checked /> 72H</label>
+            <label class="production-turnaround-other">
+              <input type="radio" name="production-turnaround" value="Khác" />
+              <span>Khác</span>
+              <input id="production-turnaround-other" type="text" placeholder="..." />
+            </label>
+          </fieldset>
+
+          <div class="production-signatures" aria-hidden="true">
+            <div class="production-signature-box">
+              <strong>Người yêu cầu</strong>
+              <span>(Ký và ghi rõ họ tên)</span>
+              <p class="production-signature-name" id="production-requester-signature">-</p>
+            </div>
+            <div class="production-signature-box">
+              <strong>Người thực hiện</strong>
+              <span>Sản xuất</span>
+              <div class="production-signature-name production-signature-list" id="production-performer-signature">-</div>
+            </div>
+            <div class="production-signature-box">
+              <strong>Người thực hiện</strong>
+              <span>Đóng gói</span>
+              <div class="production-signature-name production-signature-list" id="production-packaging-signature">-</div>
+            </div>
+            <div class="production-signature-box">
+              <strong>Người nhận trả hàng</strong>
+              <span>Ký xác nhận</span>
+              <div class="production-signature-name production-signature-list" id="production-receipt-signature">-</div>
+            </div>
+          </div>
+        </section>
+
+        <div class="order-form-steps" role="tablist" aria-label="Các phần của đơn hàng">
+          <button type="button" class="order-step-button active" id="order-step-1-button" data-order-step="1" aria-selected="true">Phần 1: Thông tin đơn hàng</button>
+          <button type="button" class="order-step-button" id="order-step-2-button" data-order-step="2" aria-selected="false">Phần 2: Hàng hóa và đơn giá</button>
+        </div>
+        <section class="order-section-card" data-order-step-panel="1">
+          <div class="order-section-body">
+            <label class="field">
+              <span>Mã đơn hàng</span>
+              <div class="prefixed-input">
+                <span>DH-</span>
+                <input id="order-id" name="order_id" type="text" inputmode="numeric" placeholder="2048" required />
+              </div>
+            </label>
+            <label class="field">
+              <span>Khách hàng</span>
+              <input id="order-customer-name" name="customer_name" type="text" placeholder="Tên khách hàng / đại lý" required />
+            </label>
+            <label class="field">
+              <span>Nhân viên kinh doanh phụ trách</span>
+              <select id="order-sales-user" name="sales_user_id" required></select>
+            </label>
+            <label class="field">
+              <span>Nhân viên giao hàng</span>
+              <select id="order-delivery-user" name="delivery_user_id" required></select>
+            </label>
+            <label class="field">
+              <span>Ngày cần giao</span>
+              <input id="order-planned-at" name="planned_delivery_at" type="text" inputmode="numeric" placeholder="dd/mm" required />
+            </label>
+            <label class="field">
+              <span>Thời gian tạo đơn</span>
+              <input id="order-created-at" type="text" readonly required />
+            </label>
+            <label class="field">
+              <span>Địa chỉ giao hàng</span>
+              <textarea id="order-address" name="delivery_address" rows="3" placeholder="Địa chỉ giao hàng / điểm nhận" required></textarea>
+            </label>
+            <label class="field">
+              <span>Ghi chú đơn hàng</span>
+              <textarea id="order-note" name="note" rows="4" placeholder="Sản phẩm, số lượng, lưu ý cho nhân viên giao hàng..."></textarea>
+            </label>
+          </div>
+        </section>
+        <section class="order-section-card hidden" data-order-step-panel="2">
+          <div class="order-section-body order-items-section">
+          <div class="order-items-grid">
+            <div class="order-item-row order-item-row-head" aria-hidden="true">
+              <span>STT</span>
+              <span>Hàng hóa</span>
+              <span>Số lượng</span>
+              <span>Đơn vị</span>
+              <span>Đơn giá</span>
+            </div>
+            <div id="order-items-list"></div>
+            <div class="order-items-empty" id="order-items-empty">Chưa có hàng hóa. Bấm + Thêm hàng hóa để tạo dòng đầu tiên.</div>
+            <div class="order-items-actions">
+              <button type="button" class="ghost-button order-add-item-button" id="order-add-item-button">+ Thêm hàng hóa</button>
+              <button type="button" class="ghost-button hidden" id="check-order-inventory-button">Kiểm tra tồn kho</button>
+            </div>
+          </div>
+            <label class="field hidden" aria-hidden="true">
+              <span>Tóm tắt hàng hóa</span>
+              <textarea id="order-items" name="order_items" rows="3" tabindex="-1"></textarea>
+            </label>
+            <div class="order-total-card">
+              <label class="field">
+                <span>Tổng giá trị đơn hàng</span>
+                <input id="order-value" name="order_value" type="number" min="0" step="1000" readonly />
+              </label>
+              <p class="order-total-display" id="order-total-display">0 ₫</p>
+              <p class="helper-text">Tổng tiền sẽ tự cộng từ từng dòng hàng hóa bên trên.</p>
+            </div>
+          </div>
+        </section>
+        <div class="import-actions">
+          <button type="button" class="ghost-button" id="cancel-order-modal">Hủy</button>
+          <button type="button" class="ghost-button hidden" id="receive-all-production-order-button">Nhận Tất Cả Đơn</button>
+          <button type="button" class="ghost-button hidden" id="receive-partial-production-order-button">Nhận 1 Phần Đơn</button>
+          <button type="button" class="accent-button hidden" id="confirm-partial-production-order-button">Xác nhận nhận đơn</button>
+          <button type="button" class="ghost-button hidden" id="confirm-production-progress-button">Xác nhận</button>
+          <button type="button" class="accent-button hidden" id="complete-production-progress-button">Xác nhận hoàn thành</button>
+          <button type="button" class="accent-button hidden" id="complete-production-packaging-button">Hoàn tất đóng gói</button>
+          <button type="button" class="accent-button hidden" id="complete-production-receipt-button">Xác nhận nhận đủ hàng</button>
+          <button type="button" class="accent-button hidden" id="edit-completed-production-order-button">Sửa lại đơn hàng</button>
+          <span class="production-complete-chip hidden" id="production-complete-chip">✓ Hoàn thành</span>
+          <button type="submit" class="accent-button" id="confirm-order-button">Tạo Đơn</button>
+        </div>
+      </form>
+    </section>
+
+    <div class="modal-backdrop hidden" id="production-packaging-confirm-backdrop"></div>
+    <section class="import-modal hidden production-packaging-confirm-modal" id="production-packaging-confirm-modal" aria-hidden="true">
+      <div class="modal-head">
+        <div>
+          <p class="sidebar-title">Đóng gói</p>
+          <h2>Xác nhận hoàn tất đóng gói</h2>
+        </div>
+        <button type="button" class="icon-button" id="close-production-packaging-confirm-modal" aria-label="Đóng">×</button>
+      </div>
+      <div class="import-form production-packaging-confirm-body">
+        <p class="production-packaging-confirm-message">Bạn có chắc chắn muốn hoàn thành việc đóng gói này không.</p>
+        <p class="production-packaging-confirm-note">Hãy chắc chắn việc đóng gói đã hoàn thành, sau khi lựa chọn sẽ không thay đổi được.</p>
+        <div class="import-actions">
+          <button type="button" class="ghost-button" id="cancel-production-packaging-confirm-button">Hủy</button>
+          <button type="button" class="accent-button" id="confirm-production-packaging-complete-button">Xác nhận hoàn tất</button>
+        </div>
+      </div>
+    </section>
+
+    <div class="modal-backdrop hidden" id="production-receipt-confirm-backdrop"></div>
+    <section class="import-modal hidden production-packaging-confirm-modal" id="production-receipt-confirm-modal" aria-hidden="true">
+      <div class="modal-head">
+        <div>
+          <p class="sidebar-title">Nhận hàng</p>
+          <h2>Xác nhận nhận đủ hàng</h2>
+        </div>
+        <button type="button" class="icon-button" id="close-production-receipt-confirm-modal" aria-label="Đóng">×</button>
+      </div>
+      <div class="import-form production-packaging-confirm-body">
+        <p class="production-packaging-confirm-message">Bạn có chắc chắn muốn xác nhận đã nhận đủ hàng của phiếu này không.</p>
+        <p class="production-packaging-confirm-note">Hãy chắc chắn việc nhận hàng đã hoàn tất, sau khi lựa chọn sẽ không thay đổi được.</p>
+        <div class="import-actions">
+          <button type="button" class="ghost-button" id="cancel-production-receipt-confirm-button">Hủy</button>
+          <button type="button" class="accent-button" id="confirm-production-receipt-complete-button">Xác nhận nhận đủ hàng</button>
+        </div>
+      </div>
+    </section>
+
+    <div class="modal-backdrop hidden" id="tape-calculator-modal-backdrop"></div>
+    <section class="import-modal hidden" id="tape-calculator-modal" aria-hidden="true">
+      <div class="modal-head">
+        <div>
+          <p class="sidebar-title">Sản xuất</p>
+          <h2>Bảng tính băng dính</h2>
+        </div>
+        <button type="button" class="icon-button" id="close-tape-calculator-modal" aria-label="Đóng">×</button>
+      </div>
+      <div class="import-form tape-calculator-layout">
+        <section class="tape-calculator-card">
+          <div class="tape-calculator-section-title">Nhập dữ liệu</div>
+          <div class="tape-calculator-grid tape-calculator-grid-head" aria-hidden="true">
+            <span>Loại băng dính</span>
+            <span>Số lượng đặt hàng (cây)</span>
+            <span>Loại lõi</span>
+            <span>Đóng gói (cuộn/cây)</span>
+            <span>Số lượng thành phẩm (cuộn)</span>
+            <span>Chiều cao jumbo (mm)</span>
+            <span>Khổ lõi (mm)</span>
+          </div>
+          <div class="tape-calculator-grid">
+            <div class="tape-calculator-picker" data-tape-calculator-kind="product">
+              <input id="tape-type" type="text" autocomplete="off" spellcheck="false" placeholder="Chọn loại băng dính" />
+              <button type="button" class="tape-calculator-picker-toggle" data-tape-calculator-toggle aria-label="Mở danh sách loại băng dính">
+                <span></span>
+              </button>
+              <div class="tape-calculator-suggestions hidden"></div>
+            </div>
+            <input id="tape-order-quantity" type="number" min="0" step="1" value="212" />
+            <div class="tape-calculator-picker" data-tape-calculator-kind="core">
+              <input id="tape-core-type" type="text" autocomplete="off" spellcheck="false" placeholder="Chọn loại lõi" />
+              <button type="button" class="tape-calculator-picker-toggle" data-tape-calculator-toggle aria-label="Mở danh sách loại lõi">
+                <span></span>
+              </button>
+              <div class="tape-calculator-suggestions hidden"></div>
+            </div>
+            <input id="tape-packaging" type="number" min="0" step="1" value="20" />
+            <input id="tape-finished-quantity" type="number" readonly />
+            <input id="tape-jumbo-height" type="number" min="0" step="1" value="1260" />
+            <input id="tape-core-width" type="number" min="0" step="1" value="15" />
+          </div>
+        </section>
+
+        <section class="tape-calculator-card">
+          <div class="tape-calculator-section-title">Kết quả trả về</div>
+          <div class="tape-calculator-grid tape-calculator-grid-head tape-calculator-grid-results" aria-hidden="true">
+            <span>Số lượng cuộn có thể cắt/tay</span>
+            <span>Khoảng dư (mm)</span>
+            <span>Số lượng tay cần cắt</span>
+            <span>Tổng số lượng thành phẩm sản xuất (cuộn)</span>
+            <span>Số lượng thành phẩm sản xuất dư (cuộn)</span>
+          </div>
+          <div class="tape-calculator-grid tape-calculator-grid-results">
+            <input id="tape-rolls-per-hand" type="number" readonly />
+            <input id="tape-remaining-mm" type="number" readonly />
+            <input id="tape-hands-needed" type="number" readonly />
+            <input id="tape-total-produced" type="number" readonly />
+            <input id="tape-extra-produced" type="number" readonly />
+          </div>
+        </section>
+
+        <div class="import-actions">
+          <button type="button" class="ghost-button" id="cancel-tape-calculator-modal">Đóng</button>
+        </div>
+      </div>
+    </section>
+
+    <div class="modal-backdrop hidden" id="login-modal-backdrop"></div>
+    <section class="import-modal login-modal hidden" id="login-modal" aria-hidden="true">
+      <div class="login-shell">
+        <aside class="login-intel-panel">
+          <div class="login-intel-grid" aria-hidden="true">
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+          <div class="login-intel-copy">
+            <p class="login-kicker">Neural Access</p>
+            <h2>Truy cập hệ thống nội bộ</h2>
+            <p class="login-lead">
+              Kết nối vào lớp tri thức doanh nghiệp, đồng bộ quyền truy cập và định tuyến truy vấn theo ngữ cảnh nội bộ.
+            </p>
+          </div>
+
+          <div class="login-metric-row">
+            <div class="login-metric-card">
+              <span class="login-metric-label">Access Layer</span>
+              <strong>Synced</strong>
+            </div>
+            <div class="login-metric-card">
+              <span class="login-metric-label">Policy Engine</span>
+              <strong>Adaptive</strong>
+            </div>
+          </div>
+        </aside>
+
+        <div class="login-form-panel">
+          <div class="modal-head login-head">
+            <div>
+              <p class="sidebar-title">Đăng nhập</p>
+              <h2>Access Control</h2>
+            </div>
+            <span class="login-status-pill">Secure Channel</span>
+          </div>
+
+          <form id="login-form" class="import-form login-form" autocomplete="off">
+            <label class="field login-field">
+              <span>Tài khoản</span>
+              <input id="login-username" name="username" type="text" placeholder="Nhập mã nhân viên hoặc tài khoản" autocomplete="off" autocapitalize="off" spellcheck="false" />
+            </label>
+            <label class="field login-field">
+              <span>Mật khẩu</span>
+              <input id="login-password" name="password" type="password" placeholder="Nhập mật khẩu" autocomplete="new-password" />
+            </label>
+            <label class="field login-field hidden" id="login-otp-field">
+              <span>Mã xác thực email</span>
+              <input id="login-otp" name="otp" type="text" inputmode="numeric" placeholder="Nhập mã 6 số" />
+            </label>
+            <p class="helper-text hidden" id="login-otp-help"></p>
+
+            <div class="import-actions login-actions">
+              <button type="submit" class="accent-button login-submit-button" id="login-submit-button">Đăng nhập</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <div class="toast hidden" id="toast"></div>
+
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>
+
+

@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+    />
+    <title>Telegram Mini App</title>
+    <link rel="stylesheet" href="/telegram/styles.css" />
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  </head>
+  <body>
+    <div class="telegram-shell">
+      <header class="hero-card">
+        <div class="hero-copy">
+          <p class="eyebrow">Telegram Mini App</p>
+          <h1>4 chuc nang chinh</h1>
+          <p class="hero-note">
+            Giu web hien tai nhu cu. Mini app nay chi gom giao hang, bang tinh, tao don va theo doi don.
+          </p>
+        </div>
+        <div class="hero-user" id="hero-user">
+          <strong id="hero-user-name">Chua dang nhap</strong>
+          <span id="hero-user-meta">Dang dung tren Telegram hoac browser</span>
+        </div>
+      </header>
+
+      <main class="app-stack">
+        <section class="panel" id="login-panel">
+          <div class="panel-head">
+            <div>
+              <p class="panel-kicker">Dang nhap</p>
+              <h2>Tai khoan noi bo</h2>
+            </div>
+          </div>
+          <form class="form-grid" id="login-form">
+            <label class="field">
+              <span>Tai khoan</span>
+              <input id="login-username" type="text" autocomplete="username" placeholder="vd: nguyenvana" />
+            </label>
+            <label class="field">
+              <span>Mat khau</span>
+              <input id="login-password" type="password" autocomplete="current-password" placeholder="Nhap mat khau" />
+            </label>
+            <div class="otp-block hidden" id="otp-block">
+              <label class="field">
+                <span>Ma OTP</span>
+                <input id="login-otp" type="text" inputmode="numeric" maxlength="6" placeholder="Nhap 6 so" />
+              </label>
+              <p class="inline-note" id="otp-note"></p>
+            </div>
+            <div class="form-actions">
+              <button class="primary-button" id="login-submit" type="submit">Dang nhap</button>
+            </div>
+          </form>
+        </section>
+
+        <section class="panel hidden" id="workspace-panel">
+          <div class="panel-head workspace-head">
+            <div>
+              <p class="panel-kicker">Dieu huong</p>
+              <h2>Lam viec tren Telegram</h2>
+            </div>
+            <button class="ghost-button" id="logout-button" type="button">Dang xuat</button>
+          </div>
+
+          <div class="action-grid" id="action-grid">
+            <button class="action-card accent-delivery" data-section="delivery" type="button">
+              <span class="action-title">Hoan thanh giao hang</span>
+              <span class="action-subtitle">Cap nhat ket qua giao va thanh toan</span>
+            </button>
+            <button class="action-card accent-tape" data-section="tape" type="button">
+              <span class="action-title">Bang tinh bang dinh</span>
+              <span class="action-subtitle">Tinh nhanh so tay, so cuon va du hao</span>
+            </button>
+            <button class="action-card accent-order" data-section="create" type="button">
+              <span class="action-title">Tao don</span>
+              <span class="action-subtitle">Tao don van chuyen hoac phieu san xuat</span>
+            </button>
+            <button class="action-card accent-track" data-section="tracking" type="button">
+              <span class="action-title">Theo doi don</span>
+              <span class="action-subtitle">Loc nhanh va xem tinh trang don</span>
+            </button>
+          </div>
+        </section>
+
+        <section class="panel hidden" id="delivery-panel">
+          <div class="panel-head">
+            <div>
+              <p class="panel-kicker">1 / 4</p>
+              <h2>Hoan thanh giao hang</h2>
+            </div>
+          </div>
+          <form class="form-grid" id="delivery-form">
+            <label class="field">
+              <span>Don van chuyen</span>
+              <select id="delivery-order-id"></select>
+            </label>
+            <label class="field">
+              <span>Khach hang</span>
+              <input id="delivery-customer-name" type="text" placeholder="Ten khach hang" />
+            </label>
+            <label class="field">
+              <span>Dia chi</span>
+              <input id="delivery-address" type="text" placeholder="Dia chi giao hang" disabled />
+            </label>
+            <label class="field">
+              <span>NV kinh doanh</span>
+              <select id="delivery-sales-user"></select>
+            </label>
+            <label class="field">
+              <span>Ket qua giao</span>
+              <select id="delivery-result-status">
+                <option value="delivered">Giao thanh cong</option>
+                <option value="partial">Giao mot phan</option>
+                <option value="rescheduled">Khach hen lai</option>
+                <option value="failed">Khong giao duoc</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>Thoi gian hoan thanh</span>
+              <input id="delivery-completed-at" type="datetime-local" />
+            </label>
+            <label class="field">
+              <span>Thanh toan</span>
+              <select id="delivery-payment-status">
+                <option value="unpaid">Chua thanh toan</option>
+                <option value="paid">Da thanh toan</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>Hinh thuc</span>
+              <select id="delivery-payment-method">
+                <option value="">Chua ro</option>
+                <option value="cash">Tien mat</option>
+                <option value="bank_transfer">Chuyen khoan</option>
+              </select>
+            </label>
+            <label class="field field-full">
+              <span>Ghi chu</span>
+              <textarea id="delivery-note" rows="3" placeholder="Them ghi chu neu can"></textarea>
+            </label>
+            <div class="form-actions">
+              <button class="primary-button" id="delivery-submit" type="submit">Cap nhat giao hang</button>
+            </div>
+          </form>
+        </section>
+
+        <section class="panel hidden" id="tape-panel">
+          <div class="panel-head">
+            <div>
+              <p class="panel-kicker">2 / 4</p>
+              <h2>Bang tinh bang dinh</h2>
+            </div>
+            <span class="mini-badge" id="tape-source-badge">Dang tai du lieu</span>
+          </div>
+          <form class="form-grid" id="tape-form">
+            <label class="field">
+              <span>Loai bang</span>
+              <select id="tape-type"></select>
+            </label>
+            <label class="field">
+              <span>So luong don</span>
+              <input id="tape-order-quantity" type="number" min="0" step="1" />
+            </label>
+            <label class="field">
+              <span>Loai loi</span>
+              <select id="tape-core-type"></select>
+            </label>
+            <label class="field">
+              <span>Dong goi</span>
+              <input id="tape-packaging" type="number" min="0" step="1" />
+            </label>
+            <label class="field">
+              <span>Cao jumbo (mm)</span>
+              <input id="tape-jumbo-height" type="number" min="0" step="1" />
+            </label>
+            <label class="field">
+              <span>Kho loi (mm)</span>
+              <input id="tape-core-width" type="number" min="0" step="1" />
+            </label>
+          </form>
+          <div class="metrics-grid" id="tape-metrics">
+            <article class="metric-card">
+              <span>Thanh pham</span>
+              <strong id="tape-finished-quantity">0</strong>
+            </article>
+            <article class="metric-card">
+              <span>Cuon moi tay</span>
+              <strong id="tape-rolls-per-hand">0</strong>
+            </article>
+            <article class="metric-card">
+              <span>Du mm</span>
+              <strong id="tape-remaining-mm">0</strong>
+            </article>
+            <article class="metric-card">
+              <span>So tay can</span>
+              <strong id="tape-hands-needed">0</strong>
+            </article>
+            <article class="metric-card">
+              <span>Tong san luong</span>
+              <strong id="tape-total-produced">0</strong>
+            </article>
+            <article class="metric-card">
+              <span>Du xuat</span>
+              <strong id="tape-extra-produced">0</strong>
+            </article>
+          </div>
+        </section>
+
+        <section class="panel hidden" id="create-panel">
+          <div class="panel-head">
+            <div>
+              <p class="panel-kicker">3 / 4</p>
+              <h2>Tao don</h2>
+            </div>
+          </div>
+          <div class="segment" id="create-kind-switch">
+            <button class="segment-button is-active" data-order-kind="transport" type="button">Don van chuyen</button>
+            <button class="segment-button" data-order-kind="production" type="button">Phieu san xuat</button>
+          </div>
+          <form class="form-grid" id="create-form">
+            <label class="field">
+              <span>Ma don</span>
+              <input id="create-order-id" type="text" placeholder="VD: DH-0002" />
+            </label>
+            <label class="field">
+              <span>Khach hang</span>
+              <input id="create-customer-name" type="text" placeholder="Ten khach hang" />
+            </label>
+            <label class="field">
+              <span>NV kinh doanh</span>
+              <select id="create-sales-user"></select>
+            </label>
+            <label class="field transport-only" id="create-delivery-user-field">
+              <span>NV giao hang</span>
+              <select id="create-delivery-user"></select>
+            </label>
+            <label class="field transport-only" id="create-planned-at-field">
+              <span>Ngay can giao</span>
+              <input id="create-planned-at" type="datetime-local" />
+            </label>
+            <label class="field transport-only field-full" id="create-address-field">
+              <span>Dia chi giao</span>
+              <input id="create-address" type="text" placeholder="Dia chi giao hang" />
+            </label>
+            <label class="field field-full">
+              <span>Hang hoa / Noi dung</span>
+              <textarea
+                id="create-order-items"
+                rows="5"
+                placeholder="Nhap tung dong, vi du:&#10;1. Bang dinh BOPP Vang 500g x 10 cuon&#10;2. Bang dinh trong 1kg x 5 cuon"
+              ></textarea>
+            </label>
+            <label class="field transport-only" id="create-order-value-field">
+              <span>Gia tri don</span>
+              <input id="create-order-value" type="number" min="0" step="1000" placeholder="0" />
+            </label>
+            <label class="field field-full">
+              <span>Ghi chu</span>
+              <textarea id="create-note" rows="3" placeholder="Ghi chu bo sung"></textarea>
+            </label>
+            <div class="form-actions">
+              <button class="primary-button" id="create-submit" type="submit">Tao don</button>
+            </div>
+          </form>
+        </section>
+
+        <section class="panel hidden" id="tracking-panel">
+          <div class="panel-head">
+            <div>
+              <p class="panel-kicker">4 / 4</p>
+              <h2>Theo doi don</h2>
+            </div>
+            <button class="ghost-button" id="refresh-orders-button" type="button">Tai lai</button>
+          </div>
+
+          <div class="segment" id="tracking-kind-switch">
+            <button class="segment-button is-active" data-track-kind="transport" type="button">Van chuyen</button>
+            <button class="segment-button" data-track-kind="production" type="button">San xuat</button>
+          </div>
+
+          <div class="form-grid compact-grid">
+            <label class="field field-full">
+              <span>Tim nhanh</span>
+              <input id="tracking-search" type="search" placeholder="Ma don, khach hang, NVKD, NV giao" />
+            </label>
+          </div>
+
+          <div class="order-list" id="tracking-list"></div>
+        </section>
+      </main>
+    </div>
+
+    <div class="toast-stack" id="toast-stack" aria-live="polite" aria-atomic="true"></div>
+
+    <script type="module" src="/telegram/app.js"></script>
+  </body>
+</html>

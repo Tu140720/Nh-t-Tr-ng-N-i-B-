@@ -1,0 +1,1003 @@
+const sessionUrl = "/api/session";
+const loginUrl = "/api/login";
+const loginVerifyUrl = "/api/login/verify";
+const logoutUrl = "/api/logout";
+const usersUrl = "/api/users";
+const ordersUrl = "/api/orders";
+const deliveryCompleteUrl = "/api/delivery/complete";
+const orderCreateUrl = "/api/orders/create";
+const tapeCalculatorConfigUrl = "/api/tape-calculator/config";
+
+const AUTH_STORAGE_KEY = "telegramMiniAuthToken";
+
+const state = {
+  authToken: localStorage.getItem(AUTH_STORAGE_KEY) || "",
+  currentUser: null,
+  users: [],
+  orders: [],
+  challengeToken: "",
+  orderKind: "transport",
+  trackingKind: "transport",
+  tapeConfig: null,
+  tapeLoaded: false,
+  activeSection: "",
+};
+
+const loginPanel = document.querySelector("#login-panel");
+const workspacePanel = document.querySelector("#workspace-panel");
+const loginForm = document.querySelector("#login-form");
+const loginUsername = document.querySelector("#login-username");
+const loginPassword = document.querySelector("#login-password");
+const loginOtp = document.querySelector("#login-otp");
+const otpBlock = document.querySelector("#otp-block");
+const otpNote = document.querySelector("#otp-note");
+const loginSubmit = document.querySelector("#login-submit");
+const logoutButton = document.querySelector("#logout-button");
+const heroUserName = document.querySelector("#hero-user-name");
+const heroUserMeta = document.querySelector("#hero-user-meta");
+const actionButtons = Array.from(document.querySelectorAll("[data-section]"));
+
+const deliveryPanel = document.querySelector("#delivery-panel");
+const tapePanel = document.querySelector("#tape-panel");
+const createPanel = document.querySelector("#create-panel");
+const trackingPanel = document.querySelector("#tracking-panel");
+
+const deliveryForm = document.querySelector("#delivery-form");
+const deliveryOrderId = document.querySelector("#delivery-order-id");
+const deliveryCustomerName = document.querySelector("#delivery-customer-name");
+const deliveryAddress = document.querySelector("#delivery-address");
+const deliverySalesUser = document.querySelector("#delivery-sales-user");
+const deliveryResultStatus = document.querySelector("#delivery-result-status");
+const deliveryCompletedAt = document.querySelector("#delivery-completed-at");
+const deliveryPaymentStatus = document.querySelector("#delivery-payment-status");
+const deliveryPaymentMethod = document.querySelector("#delivery-payment-method");
+const deliveryNote = document.querySelector("#delivery-note");
+const deliverySubmit = document.querySelector("#delivery-submit");
+
+const tapeType = document.querySelector("#tape-type");
+const tapeOrderQuantity = document.querySelector("#tape-order-quantity");
+const tapeCoreType = document.querySelector("#tape-core-type");
+const tapePackaging = document.querySelector("#tape-packaging");
+const tapeJumboHeight = document.querySelector("#tape-jumbo-height");
+const tapeCoreWidth = document.querySelector("#tape-core-width");
+const tapeFinishedQuantity = document.querySelector("#tape-finished-quantity");
+const tapeRollsPerHand = document.querySelector("#tape-rolls-per-hand");
+const tapeRemainingMm = document.querySelector("#tape-remaining-mm");
+const tapeHandsNeeded = document.querySelector("#tape-hands-needed");
+const tapeTotalProduced = document.querySelector("#tape-total-produced");
+const tapeExtraProduced = document.querySelector("#tape-extra-produced");
+const tapeSourceBadge = document.querySelector("#tape-source-badge");
+
+const createKindButtons = Array.from(document.querySelectorAll("[data-order-kind]"));
+const createForm = document.querySelector("#create-form");
+const createOrderId = document.querySelector("#create-order-id");
+const createCustomerName = document.querySelector("#create-customer-name");
+const createSalesUser = document.querySelector("#create-sales-user");
+const createDeliveryUser = document.querySelector("#create-delivery-user");
+const createPlannedAt = document.querySelector("#create-planned-at");
+const createAddress = document.querySelector("#create-address");
+const createOrderItems = document.querySelector("#create-order-items");
+const createOrderValue = document.querySelector("#create-order-value");
+const createNote = document.querySelector("#create-note");
+const createSubmit = document.querySelector("#create-submit");
+const transportOnlyFields = Array.from(document.querySelectorAll(".transport-only"));
+
+const trackingKindButtons = Array.from(document.querySelectorAll("[data-track-kind]"));
+const trackingSearch = document.querySelector("#tracking-search");
+const trackingList = document.querySelector("#tracking-list");
+const refreshOrdersButton = document.querySelector("#refresh-orders-button");
+
+const toastStack = document.querySelector("#toast-stack");
+
+const TelegramWebApp = window.Telegram?.WebApp || null;
+
+init().catch((error) => {
+  console.error(error);
+  showToast(error.message || "Khong the khoi dong mini app.", "error");
+});
+
+async function init() {
+  initTelegramShell();
+  bindEvents();
+  renderHeroUser();
+  if (state.authToken) {
+    const restored = await restoreSession();
+    if (restored) {
+      return;
+    }
+  }
+  showLoginPanel();
+}
+
+function initTelegramShell() {
+  if (!TelegramWebApp) {
+    heroUserMeta.textContent = "Dang test tren browser";
+    return;
+  }
+
+  TelegramWebApp.ready();
+  TelegramWebApp.expand();
+  if (TelegramWebApp.setHeaderColor) {
+    try {
+      TelegramWebApp.setHeaderColor("#101b27");
+    } catch {
+      void 0;
+    }
+  }
+  heroUserMeta.textContent = "Dang mo trong Telegram";
+}
+
+function bindEvents() {
+  loginForm?.addEventListener("submit", handleLoginSubmit);
+  logoutButton?.addEventListener("click", handleLogout);
+  actionButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      const section = button.dataset.section || "";
+      if (!isSectionAllowed(section)) {
+        showToast("Ban khong co quyen dung muc nay.", "error");
+        return;
+      }
+      if (TelegramWebApp?.HapticFeedback?.impactOccurred) {
+        TelegramWebApp.HapticFeedback.impactOccurred("light");
+      }
+      openSection(section);
+    });
+  });
+
+  deliveryOrderId?.addEventListener("change", autofillDeliveryForm);
+  deliveryPaymentStatus?.addEventListener("change", syncDeliveryPaymentMethodState);
+  deliveryForm?.addEventListener("submit", handleDeliverySubmit);
+
+  [tapeType, tapeOrderQuantity, tapeCoreType, tapePackaging, tapeJumboHeight, tapeCoreWidth].forEach((field) => {
+    field?.addEventListener("input", updateTapeResults);
+    field?.addEventListener("change", updateTapeResults);
+  });
+
+  createKindButtons.forEach((button) => {
+    button.addEventListener("click", () => setOrderKind(button.dataset.orderKind || "transport"));
+  });
+  createForm?.addEventListener("submit", handleCreateSubmit);
+
+  trackingKindButtons.forEach((button) => {
+    button.addEventListener("click", () => setTrackingKind(button.dataset.trackKind || "transport"));
+  });
+  trackingSearch?.addEventListener("input", renderTrackingOrders);
+  refreshOrdersButton?.addEventListener("click", async () => {
+    refreshOrdersButton.disabled = true;
+    try {
+      await loadOrders();
+      showToast("Da tai lai danh sach don.", "success");
+    } catch (error) {
+      showToast(error.message || "Khong the tai lai don hang.", "error");
+    } finally {
+      refreshOrdersButton.disabled = false;
+    }
+  });
+}
+
+async function restoreSession() {
+  try {
+    const payload = await fetchJson(sessionUrl);
+    if (!payload.authenticated || !payload.currentUser) {
+      clearAuth();
+      showLoginPanel();
+      return false;
+    }
+    state.currentUser = payload.currentUser;
+    await bootstrapWorkspace();
+    return true;
+  } catch {
+    clearAuth();
+    showLoginPanel();
+    return false;
+  }
+}
+
+async function bootstrapWorkspace() {
+  showWorkspacePanel();
+  renderHeroUser();
+  await Promise.all([loadUsers(), loadOrders()]);
+  applyPermissionState();
+  populateCreateUserOptions();
+  populateDeliverySalesOptions();
+  populateDeliveryOrders();
+  setOrderKind(state.orderKind);
+  setTrackingKind(state.trackingKind);
+  ensureDefaultSection();
+}
+
+function showLoginPanel() {
+  loginPanel?.classList.remove("hidden");
+  workspacePanel?.classList.add("hidden");
+  hideAllFeaturePanels();
+  resetLoginState();
+  renderHeroUser();
+}
+
+function showWorkspacePanel() {
+  loginPanel?.classList.add("hidden");
+  workspacePanel?.classList.remove("hidden");
+}
+
+function hideAllFeaturePanels() {
+  [deliveryPanel, tapePanel, createPanel, trackingPanel].forEach((panel) => panel?.classList.add("hidden"));
+  actionButtons.forEach((button) => button.classList.remove("is-active"));
+  state.activeSection = "";
+}
+
+function ensureDefaultSection() {
+  const preferredOrder = ["delivery", "create", "tracking", "tape"];
+  const nextSection = preferredOrder.find((section) => isSectionAllowed(section));
+  if (nextSection) {
+    openSection(nextSection);
+  }
+}
+
+async function openSection(section) {
+  hideAllFeaturePanels();
+  state.activeSection = section;
+  actionButtons.forEach((button) => {
+    button.classList.toggle("is-active", button.dataset.section === section);
+  });
+
+  if (section === "delivery") {
+    deliveryPanel?.classList.remove("hidden");
+    await loadOrders();
+    populateDeliveryOrders();
+    autofillDeliveryForm();
+    return;
+  }
+
+  if (section === "tape") {
+    tapePanel?.classList.remove("hidden");
+    await loadTapeConfig();
+    return;
+  }
+
+  if (section === "create") {
+    createPanel?.classList.remove("hidden");
+    populateCreateUserOptions();
+    setOrderKind(state.orderKind);
+    return;
+  }
+
+  if (section === "tracking") {
+    trackingPanel?.classList.remove("hidden");
+    await loadOrders();
+    renderTrackingOrders();
+  }
+}
+
+async function handleLoginSubmit(event) {
+  event.preventDefault();
+  loginSubmit.disabled = true;
+
+  try {
+    if (state.challengeToken) {
+      const otpCode = String(loginOtp?.value || "").trim();
+      if (!otpCode) {
+        throw new Error("Can nhap ma OTP.");
+      }
+      const payload = await postJson(
+        loginVerifyUrl,
+        {
+          challengeToken: state.challengeToken,
+          code: otpCode,
+        },
+        { skipAuth: true },
+      );
+      finishLogin(payload.token, payload.currentUser);
+      await bootstrapWorkspace();
+      showToast("Dang nhap thanh cong.", "success");
+      return;
+    }
+
+    const username = String(loginUsername?.value || "").trim();
+    const password = String(loginPassword?.value || "");
+    if (!username || !password) {
+      throw new Error("Can nhap tai khoan va mat khau.");
+    }
+
+    const payload = await postJson(
+      loginUrl,
+      {
+        username,
+        password,
+      },
+      { skipAuth: true },
+    );
+
+    if (payload.otp_required) {
+      state.challengeToken = String(payload.challengeToken || "").trim();
+      otpBlock?.classList.remove("hidden");
+      otpNote.textContent = payload.delivery || "Ma OTP da duoc gui.";
+      loginSubmit.textContent = "Xac minh OTP";
+      loginOtp?.focus();
+      showToast("Nhap ma OTP de hoan tat dang nhap.", "success");
+      return;
+    }
+
+    finishLogin(payload.token, payload.currentUser);
+    await bootstrapWorkspace();
+    showToast("Dang nhap thanh cong.", "success");
+  } catch (error) {
+    showToast(error.message || "Khong the dang nhap.", "error");
+  } finally {
+    loginSubmit.disabled = false;
+  }
+}
+
+function finishLogin(token, currentUser) {
+  state.authToken = String(token || "").trim();
+  state.currentUser = currentUser || null;
+  state.challengeToken = "";
+  if (state.authToken) {
+    localStorage.setItem(AUTH_STORAGE_KEY, state.authToken);
+  }
+  showWorkspacePanel();
+  resetLoginState();
+  renderHeroUser();
+}
+
+async function handleLogout() {
+  logoutButton.disabled = true;
+  try {
+    if (state.authToken) {
+      await postJson(logoutUrl, {});
+    }
+  } catch {
+    void 0;
+  } finally {
+    logoutButton.disabled = false;
+    clearAuth();
+    state.currentUser = null;
+    state.users = [];
+    state.orders = [];
+    showLoginPanel();
+    showToast("Da dang xuat.", "success");
+  }
+}
+
+function clearAuth() {
+  state.authToken = "";
+  state.challengeToken = "";
+  localStorage.removeItem(AUTH_STORAGE_KEY);
+}
+
+function resetLoginState() {
+  loginForm?.reset();
+  otpBlock?.classList.add("hidden");
+  otpNote.textContent = "";
+  loginSubmit.textContent = "Dang nhap";
+}
+
+async function loadUsers() {
+  const payload = await fetchJson(usersUrl);
+  state.users = Array.isArray(payload.users) ? payload.users : [];
+  if (payload.currentUser) {
+    state.currentUser = payload.currentUser;
+    renderHeroUser();
+  }
+}
+
+async function loadOrders() {
+  if (!canViewOrders()) {
+    state.orders = [];
+    renderTrackingOrders();
+    populateDeliveryOrders();
+    return;
+  }
+  const payload = await fetchJson(ordersUrl);
+  state.orders = Array.isArray(payload.orders) ? payload.orders : [];
+  populateDeliveryOrders();
+  renderTrackingOrders();
+}
+
+async function loadTapeConfig() {
+  if (state.tapeLoaded) {
+    return;
+  }
+
+  try {
+    const payload = await fetchJson(tapeCalculatorConfigUrl);
+    state.tapeConfig = payload || {};
+    state.tapeLoaded = true;
+    applyTapeConfig();
+  } catch (error) {
+    tapeSourceBadge.textContent = "Khong tai duoc config";
+    throw error;
+  }
+}
+
+function applyTapeConfig() {
+  const products = Array.isArray(state.tapeConfig?.products) ? state.tapeConfig.products : [];
+  const cores = Array.isArray(state.tapeConfig?.cores) ? state.tapeConfig.cores : [];
+  const defaults = state.tapeConfig?.defaults || {};
+
+  tapeType.innerHTML = products.length
+    ? products
+        .map((item) => `<option value="${escapeHtml(item.code)}">${escapeHtml(item.code)}</option>`)
+        .join("")
+    : '<option value="">Khong co du lieu</option>';
+
+  tapeCoreType.innerHTML = cores.length
+    ? cores
+        .map((item) => `<option value="${escapeHtml(item.code)}">${escapeHtml(item.code)}</option>`)
+        .join("")
+    : '<option value="">Khong co du lieu</option>';
+
+  tapeType.value = products.some((item) => item.code === defaults.tape_type) ? defaults.tape_type : products[0]?.code || "";
+  tapeCoreType.value = cores.some((item) => item.code === defaults.core_type) ? defaults.core_type : cores[0]?.code || "";
+  tapeOrderQuantity.value = String(defaults.order_quantity || 0);
+  tapePackaging.value = String(defaults.packaging || 0);
+  tapeJumboHeight.value = String(defaults.jumbo_height || products[0]?.jumbo_height || 0);
+  tapeCoreWidth.value = String(defaults.core_width || cores[0]?.width_mm || 0);
+  tapeSourceBadge.textContent = state.tapeConfig?.fallback ? "Dang dung cache" : "Dang dung sheet live";
+  updateTapeResults();
+}
+
+function updateTapeResults() {
+  const products = Array.isArray(state.tapeConfig?.products) ? state.tapeConfig.products : [];
+  const cores = Array.isArray(state.tapeConfig?.cores) ? state.tapeConfig.cores : [];
+  const selectedProduct = products.find((item) => item.code === tapeType?.value) || null;
+  const selectedCore = cores.find((item) => item.code === tapeCoreType?.value) || null;
+  const orderQuantity = Math.max(0, Number(tapeOrderQuantity?.value || 0));
+  const packaging = Math.max(0, Number(tapePackaging?.value || 0));
+  const jumboHeight = Math.max(0, Number(tapeJumboHeight?.value || selectedProduct?.jumbo_height || 0));
+  const coreWidth = Math.max(0, Number(tapeCoreWidth?.value || selectedCore?.width_mm || 0));
+
+  if (selectedProduct && Number(tapeJumboHeight?.value || 0) !== Number(selectedProduct.jumbo_height || 0)) {
+    tapeJumboHeight.value = String(selectedProduct.jumbo_height || 0);
+  }
+  if (selectedCore && Number(tapeCoreWidth?.value || 0) !== Number(selectedCore.width_mm || 0)) {
+    tapeCoreWidth.value = String(selectedCore.width_mm || 0);
+  }
+
+  const finishedQuantity = orderQuantity * packaging;
+  const rollsPerHand = coreWidth > 0 ? Math.floor(jumboHeight / coreWidth) : 0;
+  const remainingMm = rollsPerHand > 0 ? jumboHeight - rollsPerHand * coreWidth : 0;
+  const handsNeeded = rollsPerHand > 0 ? Math.ceil(finishedQuantity / rollsPerHand) : 0;
+  const totalProduced = rollsPerHand * handsNeeded;
+  const extraProduced = Math.max(0, totalProduced - finishedQuantity);
+
+  tapeFinishedQuantity.textContent = formatNumber(finishedQuantity);
+  tapeRollsPerHand.textContent = formatNumber(rollsPerHand);
+  tapeRemainingMm.textContent = formatNumber(remainingMm);
+  tapeHandsNeeded.textContent = formatNumber(handsNeeded);
+  tapeTotalProduced.textContent = formatNumber(totalProduced);
+  tapeExtraProduced.textContent = formatNumber(extraProduced);
+}
+
+function populateCreateUserOptions() {
+  const salesUsers = state.users
+    .filter((user) => String(user?.department || "").trim().toLowerCase() === "sales")
+    .sort((left, right) => String(left?.name || "").localeCompare(String(right?.name || ""), "vi"));
+
+  const deliveryUsers = state.users
+    .filter((user) => {
+      const department = String(user?.department || "").trim().toLowerCase();
+      return ["operations", "transport", "logistics", "delivery"].includes(department);
+    })
+    .sort((left, right) => String(left?.name || "").localeCompare(String(right?.name || ""), "vi"));
+
+  createSalesUser.innerHTML = salesUsers.length
+    ? salesUsers
+        .map((user) => `<option value="${escapeHtml(user.id)}">${escapeHtml(buildUserLabel(user))}</option>`)
+        .join("")
+    : '<option value="">Khong co NV kinh doanh</option>';
+
+  createDeliveryUser.innerHTML = deliveryUsers.length
+    ? deliveryUsers
+        .map((user) => `<option value="${escapeHtml(user.id)}">${escapeHtml(buildUserLabel(user))}</option>`)
+        .join("")
+    : '<option value="">Khong co NV giao hang</option>';
+
+  if (!canChooseSalesAssignee() && state.currentUser?.id) {
+    createSalesUser.value = String(state.currentUser.id || "");
+    createSalesUser.disabled = true;
+  } else {
+    createSalesUser.disabled = false;
+  }
+}
+
+function populateDeliverySalesOptions() {
+  const salesUsers = state.users
+    .filter((user) => String(user?.department || "").trim().toLowerCase() === "sales")
+    .sort((left, right) => String(left?.name || "").localeCompare(String(right?.name || ""), "vi"));
+
+  deliverySalesUser.innerHTML = salesUsers.length
+    ? salesUsers
+        .map((user) => `<option value="${escapeHtml(user.id)}">${escapeHtml(buildUserLabel(user))}</option>`)
+        .join("")
+    : '<option value="">Khong co NV kinh doanh</option>';
+}
+
+function populateDeliveryOrders() {
+  const options = getPendingTransportOrders();
+  deliveryOrderId.innerHTML = options.length
+    ? options
+        .map((order) => `<option value="${escapeHtml(order.order_id || "")}">${escapeHtml(buildDeliveryOptionLabel(order))}</option>`)
+        .join("")
+    : '<option value="">Khong co don can giao</option>';
+}
+
+function autofillDeliveryForm() {
+  const orderId = normalizeOrderIdValue(deliveryOrderId?.value || "");
+  const order = state.orders.find((item) => normalizeOrderIdValue(item?.order_id || "") === orderId);
+  if (!order) {
+    deliveryCustomerName.value = "";
+    deliveryAddress.value = "";
+    if (deliverySalesUser.options.length) {
+      deliverySalesUser.selectedIndex = 0;
+    }
+    return;
+  }
+
+  deliveryCustomerName.value = order.customer_name || "";
+  deliveryAddress.value = order.delivery_address || "";
+  if (order.sales_user_id) {
+    deliverySalesUser.value = order.sales_user_id;
+  }
+  deliveryCompletedAt.value = toLocalDateTimeInputValue(new Date().toISOString());
+}
+
+function syncDeliveryPaymentMethodState() {
+  const isPaid = String(deliveryPaymentStatus?.value || "").trim().toLowerCase() === "paid";
+  deliveryPaymentMethod.disabled = !isPaid;
+  if (!isPaid) {
+    deliveryPaymentMethod.value = "";
+  }
+}
+
+async function handleDeliverySubmit(event) {
+  event.preventDefault();
+  if (!canCompleteDelivery()) {
+    showToast("Ban khong co quyen cap nhat giao hang.", "error");
+    return;
+  }
+
+  deliverySubmit.disabled = true;
+  try {
+    const payload = await postJson(deliveryCompleteUrl, {
+      order_id: normalizeOrderIdValue(deliveryOrderId?.value || ""),
+      customer_name: deliveryCustomerName?.value || "",
+      sales_user_id: deliverySalesUser?.value || "",
+      result_status: deliveryResultStatus?.value || "delivered",
+      completed_at: deliveryCompletedAt?.value || "",
+      payment_status: deliveryPaymentStatus?.value || "unpaid",
+      payment_method: deliveryPaymentMethod?.value || "",
+      note: deliveryNote?.value || "",
+    });
+    applyOrderPayload(payload);
+    deliveryForm.reset();
+    syncDeliveryPaymentMethodState();
+    populateDeliveryOrders();
+    autofillDeliveryForm();
+    renderTrackingOrders();
+    showToast("Da cap nhat giao hang.", "success");
+  } catch (error) {
+    showToast(error.message || "Khong the cap nhat giao hang.", "error");
+  } finally {
+    deliverySubmit.disabled = false;
+  }
+}
+
+function setOrderKind(kind) {
+  state.orderKind = kind === "production" ? "production" : "transport";
+  createKindButtons.forEach((button) => {
+    button.classList.toggle("is-active", button.dataset.orderKind === state.orderKind);
+  });
+
+  const isTransport = state.orderKind === "transport";
+  transportOnlyFields.forEach((field) => field.classList.toggle("hidden", !isTransport));
+  createOrderId.placeholder = isTransport ? "VD: DH-0002" : "Bo trong de he thong tu cap ma";
+}
+
+async function handleCreateSubmit(event) {
+  event.preventDefault();
+  if (!canCreateOrder()) {
+    showToast("Ban khong co quyen tao don.", "error");
+    return;
+  }
+
+  createSubmit.disabled = true;
+  try {
+    const isTransport = state.orderKind === "transport";
+    const payload = await postJson(orderCreateUrl, {
+      order_id: normalizeOrderIdValue(createOrderId?.value || ""),
+      customer_name: createCustomerName?.value || "",
+      sales_user_id: createSalesUser?.value || "",
+      delivery_user_id: isTransport ? createDeliveryUser?.value || "" : "",
+      planned_delivery_at: isTransport ? createPlannedAt?.value || "" : "",
+      delivery_address: isTransport ? createAddress?.value || "" : "",
+      order_items: createOrderItems?.value || "",
+      order_value: isTransport ? createOrderValue?.value || "" : "",
+      note: createNote?.value || "",
+      order_kind: state.orderKind,
+    });
+    applyOrderPayload(payload);
+    createForm.reset();
+    setOrderKind(state.orderKind);
+    populateDeliveryOrders();
+    setTrackingKind(state.orderKind === "production" ? "production" : "transport");
+    renderTrackingOrders();
+    showToast(state.orderKind === "production" ? "Da tao phieu san xuat." : "Da tao don van chuyen.", "success");
+    await openSection("tracking");
+  } catch (error) {
+    showToast(error.message || "Khong the tao don.", "error");
+  } finally {
+    createSubmit.disabled = false;
+  }
+}
+
+function setTrackingKind(kind) {
+  state.trackingKind = kind === "production" ? "production" : "transport";
+  trackingKindButtons.forEach((button) => {
+    button.classList.toggle("is-active", button.dataset.trackKind === state.trackingKind);
+  });
+  renderTrackingOrders();
+}
+
+function renderTrackingOrders() {
+  if (!trackingList) {
+    return;
+  }
+
+  if (!canViewOrders()) {
+    trackingList.innerHTML = '<article class="order-card"><p class="empty-state">Ban khong co quyen xem don hang.</p></article>';
+    return;
+  }
+
+  const keyword = String(trackingSearch?.value || "").trim().toLowerCase();
+  const visibleOrders = state.orders.filter((order) => {
+    const isProduction = isProductionOrder(order);
+    if (state.trackingKind === "production" && !isProduction) {
+      return false;
+    }
+    if (state.trackingKind === "transport" && isProduction) {
+      return false;
+    }
+
+    if (!keyword) {
+      return true;
+    }
+
+    const haystack = [
+      order.order_id,
+      order.customer_name,
+      order.sales_user_name,
+      order.delivery_user_name,
+      order.production_claimed_by_names,
+      order.note,
+      order.delivery_address,
+    ]
+      .join(" ")
+      .toLowerCase();
+    return haystack.includes(keyword);
+  });
+
+  if (!visibleOrders.length) {
+    trackingList.innerHTML = '<article class="order-card"><p class="empty-state">Khong co don phu hop.</p></article>';
+    return;
+  }
+
+  trackingList.innerHTML = visibleOrders.map((order) => buildOrderCardMarkup(order)).join("");
+  trackingList.querySelectorAll("[data-track-complete]").forEach((button) => {
+    button.addEventListener("click", async () => {
+      const orderId = button.getAttribute("data-track-complete") || "";
+      const order = state.orders.find((item) => normalizeOrderIdValue(item?.order_id || "") === normalizeOrderIdValue(orderId));
+      if (!order) {
+        return;
+      }
+      await openSection("delivery");
+      deliveryOrderId.value = order.order_id || "";
+      autofillDeliveryForm();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+  });
+}
+
+function buildOrderCardMarkup(order) {
+  const isProduction = isProductionOrder(order);
+  const status = isProduction ? getProductionStatus(order) : getTransportStatus(order);
+  const factLines = isProduction
+    ? [
+        `Nguoi yeu cau: ${order.sales_user_name || "-"}`,
+        order.production_claimed_by_names ? `Dang nhan boi: ${order.production_claimed_by_names}` : "Chua co nguoi nhan",
+        order.created_at ? `Ngay tao: ${formatDateTime(order.created_at)}` : "",
+        order.note ? `Ghi chu: ${order.note}` : "",
+      ].filter(Boolean)
+    : [
+        `NVKD: ${order.sales_user_name || "-"}`,
+        `NV giao: ${order.delivery_user_name || "-"}`,
+        order.planned_delivery_at ? `Can giao: ${formatDateTime(order.planned_delivery_at)}` : "",
+        order.completed_at ? `Hoan thanh: ${formatDateTime(order.completed_at)}` : "Chua giao",
+        `Thanh toan: ${labelPaymentStatus(order.payment_status || "unpaid")}`,
+        order.delivery_address ? `Dia chi: ${order.delivery_address}` : "",
+      ].filter(Boolean);
+
+  return `
+    <article class="order-card">
+      <div class="order-head">
+        <div class="order-title">
+          <strong>${escapeHtml(order.order_id || "-")}</strong>
+          <span>${escapeHtml(order.customer_name || order.document_title || "-")}</span>
+        </div>
+        <div class="order-tags">
+          <span class="tag ${escapeHtml(status.tone)}">${escapeHtml(status.label)}</span>
+          ${isProduction ? '<span class="tag">San xuat</span>' : '<span class="tag">Van chuyen</span>'}
+        </div>
+      </div>
+      <div class="order-meta">${factLines.map((line) => escapeHtml(line)).join("<br />")}</div>
+      ${
+        !isProduction && canCompleteDelivery() && String(order.status || "").trim().toLowerCase() !== "completed"
+          ? `<div class="order-actions"><button class="ghost-button" data-track-complete="${escapeHtml(order.order_id || "")}" type="button">Hoan tat giao</button></div>`
+          : ""
+      }
+    </article>
+  `;
+}
+
+function getTransportStatus(order) {
+  const normalized = String(order?.status || "").trim().toLowerCase();
+  if (normalized === "completed" || order?.completed_at) {
+    return { label: "Da giao", tone: "success" };
+  }
+  if (normalized === "assigned") {
+    return { label: "Dang giao", tone: "warn" };
+  }
+  return { label: "Dang xu ly", tone: "" };
+}
+
+function getProductionStatus(order) {
+  if (order?.production_receipt_completed_at) {
+    return { label: "Da nhan du hang", tone: "success" };
+  }
+  if (order?.production_packaging_completed_at) {
+    return { label: "Da dong goi", tone: "warn" };
+  }
+  if (String(order?.production_claimed_by_names || "").trim()) {
+    return { label: "Dang san xuat", tone: "" };
+  }
+  return { label: "Chua nhan", tone: "danger" };
+}
+
+function applyPermissionState() {
+  actionButtons.forEach((button) => {
+    const allowed = isSectionAllowed(button.dataset.section || "");
+    button.classList.toggle("is-disabled", !allowed);
+    button.setAttribute("aria-disabled", allowed ? "false" : "true");
+  });
+}
+
+function isSectionAllowed(section) {
+  if (!state.currentUser) {
+    return false;
+  }
+  if (section === "delivery") {
+    return canCompleteDelivery();
+  }
+  if (section === "create") {
+    return canCreateOrder();
+  }
+  if (section === "tracking") {
+    return canViewOrders();
+  }
+  if (section === "tape") {
+    return true;
+  }
+  return false;
+}
+
+function canCreateOrder() {
+  const role = String(state.currentUser?.role || "").trim().toLowerCase();
+  const department = String(state.currentUser?.department || "").trim().toLowerCase();
+  return role === "admin" || role === "director" || role === "manager" || department === "sales";
+}
+
+function canChooseSalesAssignee() {
+  const role = String(state.currentUser?.role || "").trim().toLowerCase();
+  return role === "admin" || role === "director" || role === "manager";
+}
+
+function canViewOrders() {
+  if (!state.currentUser) {
+    return false;
+  }
+  const role = String(state.currentUser?.role || "").trim().toLowerCase();
+  const department = String(state.currentUser?.department || "").trim().toLowerCase();
+  return (
+    role === "admin" ||
+    role === "director" ||
+    role === "manager" ||
+    department === "sales" ||
+    department === "production" ||
+    ["operations", "transport", "logistics", "delivery"].includes(department)
+  );
+}
+
+function canCompleteDelivery() {
+  const role = String(state.currentUser?.role || "").trim().toLowerCase();
+  const department = String(state.currentUser?.department || "").trim().toLowerCase();
+  return role === "admin" || role === "director" || ["operations", "transport", "logistics", "delivery"].includes(department);
+}
+
+function isProductionOrder(order) {
+  const explicitKind = String(order?.order_kind || "").trim().toLowerCase();
+  if (explicitKind === "production") {
+    return true;
+  }
+  if (explicitKind === "transport") {
+    return false;
+  }
+  return !String(order?.delivery_user_id || "").trim();
+}
+
+function getPendingTransportOrders() {
+  return state.orders
+    .filter((order) => !isProductionOrder(order))
+    .filter((order) => String(order?.status || "").trim().toLowerCase() !== "completed")
+    .sort((left, right) => String(right?.created_at || "").localeCompare(String(left?.created_at || "")));
+}
+
+function applyOrderPayload(payload) {
+  if (Array.isArray(payload?.orders)) {
+    state.orders = payload.orders;
+  }
+}
+
+function renderHeroUser() {
+  if (!state.currentUser) {
+    heroUserName.textContent = "Chua dang nhap";
+    heroUserMeta.textContent = TelegramWebApp ? "Dang mo trong Telegram" : "Dang test tren browser";
+    return;
+  }
+
+  heroUserName.textContent = state.currentUser.name || state.currentUser.username || "Da dang nhap";
+  const parts = [
+    labelRole(state.currentUser.role),
+    labelDepartment(state.currentUser.department),
+    labelAccessLevel(state.currentUser.policy?.max_access_level || "basic"),
+  ].filter(Boolean);
+  heroUserMeta.textContent = parts.join(" • ");
+}
+
+function labelRole(role) {
+  const normalized = String(role || "").trim().toLowerCase();
+  if (normalized === "admin") return "Admin";
+  if (normalized === "director") return "Giam doc";
+  if (normalized === "manager") return "Quan ly";
+  return "Nhan vien";
+}
+
+function labelDepartment(department) {
+  const normalized = String(department || "").trim().toLowerCase();
+  if (normalized === "sales") return "Kinh doanh";
+  if (normalized === "production") return "San xuat";
+  if (normalized === "operations" || normalized === "transport" || normalized === "logistics" || normalized === "delivery") {
+    return "Van chuyen";
+  }
+  if (normalized === "finance") return "Tai chinh";
+  if (normalized === "executive") return "Ban giam doc";
+  return department || "-";
+}
+
+function labelAccessLevel(level) {
+  const normalized = String(level || "").trim().toLowerCase();
+  if (normalized === "advanced") return "Nang cao";
+  if (normalized === "sensitive") return "Ca nhan";
+  return "Co ban";
+}
+
+function labelPaymentStatus(value) {
+  return String(value || "").trim().toLowerCase() === "paid" ? "Da thanh toan" : "Chua thanh toan";
+}
+
+function normalizeOrderIdValue(value) {
+  const core = String(value || "")
+    .trim()
+    .replace(/^dh[-\s]*/i, "")
+    .replace(/[^0-9a-z-]/gi, "")
+    .trim()
+    .toUpperCase();
+  return core ? `DH-${core}` : "";
+}
+
+function buildUserLabel(user) {
+  const code = user?.employee_code || user?.username || user?.id || "-";
+  return `${user?.name || user?.username || "-"} • ${code}`;
+}
+
+function buildDeliveryOptionLabel(order) {
+  return `${order.order_id || "-"} • ${order.customer_name || "-"} • ${order.delivery_user_name || "Chua giao NV"}`;
+}
+
+function formatDateTime(value) {
+  const date = new Date(value);
+  if (!Number.isFinite(date.getTime())) {
+    return value || "-";
+  }
+  return new Intl.DateTimeFormat("vi-VN", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(date);
+}
+
+function toLocalDateTimeInputValue(value) {
+  const date = value instanceof Date ? value : new Date(value);
+  if (!Number.isFinite(date.getTime())) {
+    return "";
+  }
+  const offset = date.getTimezoneOffset();
+  const local = new Date(date.getTime() - offset * 60_000);
+  return local.toISOString().slice(0, 16);
+}
+
+function formatNumber(value) {
+  return new Intl.NumberFormat("vi-VN").format(Number(value || 0));
+}
+
+function showToast(message, tone = "success") {
+  if (!toastStack) {
+    return;
+  }
+  const element = document.createElement("div");
+  element.className = `toast ${tone === "error" ? "error" : "success"}`;
+  element.textContent = String(message || "");
+  toastStack.append(element);
+  setTimeout(() => {
+    element.remove();
+  }, 3200);
+}
+
+async function fetchJson(url, options = {}) {
+  const response = await fetch(url, {
+    cache: "no-store",
+    headers: {
+      Accept: "application/json",
+      ...(state.authToken && !options.skipAuth ? { Authorization: `Bearer ${state.authToken}` } : {}),
+    },
+  });
+  const payload = await response.json();
+  if (!response.ok) {
+    if (response.status === 401 && !options.skipAuth) {
+      clearAuth();
+      state.currentUser = null;
+      showLoginPanel();
+    }
+    throw new Error(payload.error || "Yeu cau that bai.");
+  }
+  return payload;
+}
+
+async function postJson(url, data, options = {}) {
+  const response = await fetch(url, {
+    method: "POST",
+    cache: "no-store",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      ...(state.authToken && !options.skipAuth ? { Authorization: `Bearer ${state.authToken}` } : {}),
+    },
+    body: JSON.stringify(data || {}),
+  });
+  const payload = await response.json();
+  if (!response.ok) {
+    if (response.status === 401 && !options.skipAuth) {
+      clearAuth();
+      state.currentUser = null;
+      showLoginPanel();
+    }
+    throw new Error(payload.error || "Yeu cau that bai.");
+  }
+  return payload;
+}
+
+function escapeHtml(value) {
+  return String(value || "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}

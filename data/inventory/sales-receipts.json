@@ -1,0 +1,15 @@
+[
+  {
+    "id": "sales-stock-1775560063245-a83f1d",
+    "code": "BK25",
+    "name": "Màng bọt khí 25 Cm",
+    "unit": "Cây",
+    "quantity": 100,
+    "supplier": "Abc",
+    "note": "",
+    "received_at": "2026-04-07T11:07:00.000Z",
+    "created_at": "2026-04-07T11:07:43.245Z",
+    "created_by_user_id": "sheet-nt002",
+    "created_by_user_name": "Nguyễn Phương Tú"
+  }
+]

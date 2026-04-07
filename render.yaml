@@ -1,0 +1,50 @@
+services:
+  - type: web
+    name: ai-beta-001
+    runtime: docker
+    plan: starter
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/health
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: INTERNAL_DOCS_DIR
+        value: ./data/internal
+      - key: USERS_SHEET_URL
+        sync: false
+      - key: USERS_SYNC_INTERVAL_MS
+        value: 30000
+      - key: ADMIN_OTP_TTL_MS
+        value: 300000
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        value: 465
+      - key: SMTP_SECURE
+        value: "true"
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: SMTP_FROM
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_BASE_URL
+        value: https://generativelanguage.googleapis.com/v1beta
+      - key: GEMINI_MODEL
+        value: gemini-3-flash-preview
+      - key: GEMINI_FALLBACK_MODELS
+        value: gemini-2.5-flash,gemini-2.5-flash-lite
+      - key: GEMINI_WEB_MODEL
+        value: gemini-2.5-flash
+      - key: GEMINI_WEB_FALLBACK_MODEL
+        value: gemini-2.5-flash
+      - key: GEMINI_WEB_FALLBACK_MODELS
+        value: gemini-2.5-flash-lite,gemini-2.0-flash
+      - key: GEMINI_THINKING_LEVEL
+        value: minimal
+    disk:
+      name: app-data
+      mountPath: /app/data
+      sizeGB: 10

@@ -1,0 +1,65 @@
+[
+  {
+    "id": "product-1",
+    "name": "Xốp nổ 30cm",
+    "units": [
+      "Cuộn",
+      "Cây"
+    ],
+    "default_unit": "Cây"
+  },
+  {
+    "id": "product-2",
+    "name": "Xốp nổ 40cm",
+    "units": [
+      "Cuộn",
+      "Cây"
+    ],
+    "default_unit": "Cây"
+  },
+  {
+    "id": "product-3",
+    "name": "Xốp nổ 50cm",
+    "units": [
+      "Cuộn",
+      "Cây"
+    ],
+    "default_unit": "Cây"
+  },
+  {
+    "id": "product-4",
+    "name": "Xốp nổ 60cm",
+    "units": [
+      "Cuộn",
+      "Cây"
+    ],
+    "default_unit": "Cây"
+  },
+  {
+    "id": "product-5",
+    "name": "Băng dính BOPP Vàng Lõi Nhựa 3 Loại 1Kg/Cuộn",
+    "units": [
+      "Cuộn",
+      "Cây"
+    ],
+    "default_unit": "Cây"
+  },
+  {
+    "id": "product-6",
+    "name": "Băng dính BOPP Vàng Lõi Nhựa 3 Loại 500g/Cuộn",
+    "units": [
+      "Cuộn",
+      "Cây"
+    ],
+    "default_unit": "Cây"
+  },
+  {
+    "id": "product-7",
+    "name": "Xốp nổ 25cm",
+    "units": [
+      "Cuộn",
+      "Cây"
+    ],
+    "default_unit": "Cây"
+  }
+]
