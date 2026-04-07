@@ -15,6 +15,7 @@ const AUTH_STORAGE_KEY = "telegramMiniAuthToken";
 const NOTIFICATION_ARCHIVE_STORAGE_PREFIX = "telegramMiniNotificationArchive";
 const NOTIFICATION_ARCHIVE_MAX_ITEMS = 50;
 const NOTIFICATION_POLL_INTERVAL_MS = 30_000;
+const DEFAULT_PRODUCTION_UNITS = ["cay", "cuon", "kg", "tam", "bao"];
 
 const state = {
   authToken: localStorage.getItem(AUTH_STORAGE_KEY) || "",
@@ -30,6 +31,8 @@ const state = {
   tapeConfig: null,
   tapeLoaded: false,
   activeSection: "",
+  createMenuOpen: false,
+  productionCreateOpen: false,
 };
 
 let notificationPollTimer = null;
@@ -44,10 +47,12 @@ const otpBlock = document.querySelector("#otp-block");
 const otpNote = document.querySelector("#otp-note");
 const loginSubmit = document.querySelector("#login-submit");
 const logoutButton = document.querySelector("#logout-button");
-const newChatButton = document.querySelector("#new-chat-button");
 const heroUserName = document.querySelector("#hero-user-name");
 const heroUserMeta = document.querySelector("#hero-user-meta");
 const actionButtons = Array.from(document.querySelectorAll("[data-section]"));
+const createActionPanel = document.querySelector("#create-action-panel");
+const openProductionCreateButton = document.querySelector("#open-production-create-button");
+const openTransportCreateButton = document.querySelector("#open-transport-create-button");
 const notificationFilter = document.querySelector("#notification-filter");
 const notificationList = document.querySelector("#notification-list");
 const notificationCount = document.querySelector("#notification-count");
@@ -106,6 +111,21 @@ const trackingSearch = document.querySelector("#tracking-search");
 const trackingList = document.querySelector("#tracking-list");
 const refreshOrdersButton = document.querySelector("#refresh-orders-button");
 
+const productionCreateScreen = document.querySelector("#production-create-screen");
+const productionCreateForm = document.querySelector("#production-create-form");
+const productionCreateOrderId = document.querySelector("#production-create-order-id");
+const productionCreateCustomerName = document.querySelector("#production-create-customer-name");
+const productionCreateRequester = document.querySelector("#production-create-requester");
+const productionCreateCreatedAt = document.querySelector("#production-create-created-at");
+const productionCreateItemsList = document.querySelector("#production-create-items-list");
+const productionCreateItemsEmpty = document.querySelector("#production-create-items-empty");
+const productionCreateAddItemButton = document.querySelector("#production-create-add-item-button");
+const productionCreateNote = document.querySelector("#production-create-note");
+const productionCreateTurnaroundOther = document.querySelector("#production-create-turnaround-other");
+const closeProductionCreateButton = document.querySelector("#close-production-create-button");
+const cancelProductionCreateButton = document.querySelector("#cancel-production-create-button");
+const submitProductionCreateButton = document.querySelector("#submit-production-create-button");
+
 const toastStack = document.querySelector("#toast-stack");
 
 const TelegramWebApp = window.Telegram?.WebApp || null;
@@ -149,13 +169,25 @@ function initTelegramShell() {
 function bindEvents() {
   loginForm?.addEventListener("submit", handleLoginSubmit);
   logoutButton?.addEventListener("click", handleLogout);
-  newChatButton?.addEventListener("click", openNewChat);
   notificationFilter?.addEventListener("change", () => {
     state.notificationFilter = notificationFilter.value || "all";
     renderNotifications();
   });
   markAllNotificationsReadButton?.addEventListener("click", handleMarkAllNotificationsRead);
   clearNotificationHistoryButton?.addEventListener("click", handleClearNotificationHistory);
+  openTransportCreateButton?.addEventListener("click", () => {
+    closeCreateMenu();
+    setOrderKind("transport");
+    openSection("create");
+  });
+  openProductionCreateButton?.addEventListener("click", async () => {
+    closeCreateMenu();
+    await openProductionCreateScreen();
+  });
+  closeProductionCreateButton?.addEventListener("click", closeProductionCreateScreen);
+  cancelProductionCreateButton?.addEventListener("click", closeProductionCreateScreen);
+  productionCreateAddItemButton?.addEventListener("click", () => addProductionCreateItemRow());
+  productionCreateForm?.addEventListener("submit", handleProductionCreateSubmit);
   actionButtons.forEach((button) => {
     button.addEventListener("click", () => {
       const section = button.dataset.section || "";
@@ -163,6 +195,11 @@ function bindEvents() {
         showToast("Ban khong co quyen dung muc nay.", "error");
         return;
       }
+      if (section === "create") {
+        toggleCreateMenu();
+        return;
+      }
+      closeCreateMenu();
       if (state.activeSection === section) {
         hideAllFeaturePanels();
         return;
@@ -242,6 +279,7 @@ function showLoginPanel() {
   loginPanel?.classList.remove("hidden");
   workspacePanel?.classList.add("hidden");
   hideAllFeaturePanels();
+  closeProductionCreateScreen({ silent: true });
   stopNotificationPolling();
   resetLoginState();
   renderHeroUser();
@@ -256,6 +294,7 @@ function showWorkspacePanel() {
 function hideAllFeaturePanels() {
   [deliveryPanel, tapePanel, createPanel, trackingPanel].forEach((panel) => panel?.classList.add("hidden"));
   actionButtons.forEach((button) => button.classList.remove("is-active"));
+  closeCreateMenu();
   state.activeSection = "";
 }
 
@@ -299,6 +338,53 @@ async function openSection(section) {
     await loadOrders();
     renderTrackingOrders();
     trackingPanel?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+}
+
+function toggleCreateMenu() {
+  if (state.createMenuOpen) {
+    closeCreateMenu();
+    return;
+  }
+  state.activeSection = "";
+  hideAllFeaturePanels();
+  state.createMenuOpen = true;
+  createActionPanel?.classList.remove("hidden");
+  actionButtons.forEach((button) => {
+    button.classList.toggle("is-active", button.dataset.section === "create");
+  });
+}
+
+function closeCreateMenu() {
+  state.createMenuOpen = false;
+  createActionPanel?.classList.add("hidden");
+  actionButtons.forEach((button) => {
+    if (button.dataset.section === "create" && state.activeSection !== "create") {
+      button.classList.remove("is-active");
+    }
+  });
+}
+
+async function openProductionCreateScreen() {
+  if (!canCreateOrder()) {
+    showToast("Ban khong co quyen tao phieu san xuat.", "error");
+    return;
+  }
+  await Promise.all([loadUsers(), loadOrders()]);
+  state.productionCreateOpen = true;
+  document.body.classList.add("production-create-open");
+  productionCreateScreen?.classList.remove("hidden");
+  productionCreateScreen?.setAttribute("aria-hidden", "false");
+  resetProductionCreateForm();
+}
+
+function closeProductionCreateScreen(options = {}) {
+  state.productionCreateOpen = false;
+  document.body.classList.remove("production-create-open");
+  productionCreateScreen?.classList.add("hidden");
+  productionCreateScreen?.setAttribute("aria-hidden", "true");
+  if (!options.silent) {
+    closeCreateMenu();
   }
 }
 
@@ -367,6 +453,7 @@ function finishLogin(token, currentUser) {
   state.challengeToken = "";
   if (state.authToken) {
     localStorage.setItem(AUTH_STORAGE_KEY, state.authToken);
+    localStorage.setItem("authToken", state.authToken);
   }
   showWorkspacePanel();
   resetLoginState();
@@ -389,6 +476,7 @@ async function handleLogout() {
     state.orders = [];
     state.notifications = [];
     state.notificationArchive = [];
+    closeProductionCreateScreen({ silent: true });
     showLoginPanel();
     showToast("Da dang xuat.", "success");
   }
@@ -399,6 +487,7 @@ function clearAuth() {
   state.challengeToken = "";
   stopNotificationPolling();
   localStorage.removeItem(AUTH_STORAGE_KEY);
+  localStorage.removeItem("authToken");
 }
 
 function resetLoginState() {
@@ -428,6 +517,244 @@ async function loadOrders() {
   state.orders = Array.isArray(payload.orders) ? payload.orders : [];
   populateDeliveryOrders();
   renderTrackingOrders();
+}
+
+function extractOrderSequenceValue(value) {
+  const match = String(value || "")
+    .trim()
+    .toUpperCase()
+    .match(/^DH-(\d+)$/);
+  return match ? Number(match[1]) : NaN;
+}
+
+function formatOrderSequenceValue(value) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric) || numeric < 0) {
+    return "003000";
+  }
+  return String(Math.trunc(numeric)).padStart(6, "0");
+}
+
+function getNextProductionOrderSequence() {
+  const numericValues = state.orders
+    .map((item) => extractOrderSequenceValue(item?.order_id || ""))
+    .filter((value) => Number.isFinite(value));
+  const maxValue = numericValues.length ? Math.max(...numericValues) : 2999;
+  return formatOrderSequenceValue(Math.max(3000, maxValue + 1));
+}
+
+function buildProductionUnitOptions(selectedUnit = "") {
+  const normalizedSelected = String(selectedUnit || DEFAULT_PRODUCTION_UNITS[0] || "").trim();
+  return DEFAULT_PRODUCTION_UNITS.map(
+    (unit) => `<option value="${escapeHtml(unit)}" ${unit === normalizedSelected ? "selected" : ""}>${escapeHtml(unit)}</option>`,
+  ).join("");
+}
+
+function resetProductionCreateForm() {
+  productionCreateForm?.reset();
+  populateProductionCreateRequesterOptions();
+  if (productionCreateOrderId) {
+    productionCreateOrderId.value = getNextProductionOrderSequence();
+  }
+  if (productionCreateCreatedAt) {
+    productionCreateCreatedAt.value = formatDateTime(new Date().toISOString());
+  }
+  if (productionCreateItemsList) {
+    productionCreateItemsList.innerHTML = "";
+  }
+  addProductionCreateItemRow();
+  syncProductionCreateDraft();
+}
+
+function populateProductionCreateRequesterOptions() {
+  if (!productionCreateRequester) {
+    return;
+  }
+  const salesUsers = state.users
+    .filter((user) => String(user?.department || "").trim().toLowerCase() === "sales")
+    .sort((left, right) => String(left?.name || "").localeCompare(String(right?.name || ""), "vi"));
+
+  const canChoose = canChooseSalesAssignee();
+  const currentDepartment = String(state.currentUser?.department || "").trim().toLowerCase();
+  const defaultRequester = canChoose
+    ? String(
+        (currentDepartment === "sales" ? state.currentUser?.id : salesUsers[0]?.id) || state.currentUser?.id || "",
+      ).trim()
+    : currentDepartment === "sales"
+      ? String(state.currentUser?.id || "").trim()
+      : "";
+  const availableUsers = canChoose
+    ? salesUsers
+    : salesUsers.filter((user) => String(user?.id || "").trim() === defaultRequester);
+
+  productionCreateRequester.innerHTML = availableUsers.length
+    ? availableUsers
+        .map((user) => {
+          const code = user?.employee_code || user?.username || user?.id || "-";
+          const selected = String(user?.id || "").trim() === defaultRequester ? "selected" : "";
+          return `<option value="${escapeHtml(user.id)}" ${selected}>${escapeHtml(`${user.name || user.username || "-"} • ${code}`)}</option>`;
+        })
+        .join("")
+    : '<option value="">Khong co nguoi yeu cau phu hop</option>';
+
+  productionCreateRequester.disabled = !canChoose;
+}
+
+function addProductionCreateItemRow(values = {}) {
+  if (!productionCreateItemsList) {
+    return;
+  }
+
+  const row = document.createElement("div");
+  row.className = "production-create-row";
+  row.setAttribute("data-production-create-row", "true");
+  row.innerHTML = `
+    <div class="production-create-index" data-field="index-label">1</div>
+    <input data-field="code" type="text" value="${escapeHtml(values.code || "")}" />
+    <textarea data-field="name" rows="1" placeholder="Ten hang hoa">${escapeHtml(values.name || "")}</textarea>
+    <input data-field="norm" type="text" value="${escapeHtml(values.norm || "")}" />
+    <select data-field="unit">${buildProductionUnitOptions(values.unit || "")}</select>
+    <input data-field="quantity" type="number" min="0" step="1" value="${escapeHtml(values.quantity || "")}" />
+    <input data-field="done" type="number" min="0" step="1" value="${escapeHtml(values.done || "0")}" />
+    <input data-field="missing" type="number" min="0" step="1" value="${escapeHtml(values.missing || "0")}" />
+    <input data-field="extra" type="number" min="0" step="1" value="${escapeHtml(values.extra || "0")}" />
+    <input data-field="team" type="text" value="${escapeHtml(values.team || "")}" />
+  `;
+
+  row.querySelectorAll('input[data-field="quantity"], input[data-field="done"]').forEach((input) => {
+    input.addEventListener("input", () => updateProductionCreateDerivedFields(row));
+    input.addEventListener("change", () => updateProductionCreateDerivedFields(row));
+  });
+  row.querySelector('[data-field="name"]')?.addEventListener("input", () => {
+    autoResizeProductionCreateName(row.querySelector('[data-field="name"]'));
+  });
+
+  productionCreateItemsList.append(row);
+  autoResizeProductionCreateName(row.querySelector('[data-field="name"]'));
+  updateProductionCreateDerivedFields(row);
+  syncProductionCreateDraft();
+  row.querySelector('[data-field="code"]')?.focus();
+}
+
+function autoResizeProductionCreateName(input) {
+  if (!input) {
+    return;
+  }
+  input.style.height = "0px";
+  input.style.height = `${Math.max(56, input.scrollHeight)}px`;
+}
+
+function updateProductionCreateDerivedFields(row) {
+  if (!row) {
+    return;
+  }
+  const quantity = Math.max(0, Number(row.querySelector('[data-field="quantity"]')?.value || 0));
+  const done = Math.max(0, Number(row.querySelector('[data-field="done"]')?.value || 0));
+  const missing = Math.max(0, quantity - done);
+  const extra = Math.max(0, done - quantity);
+  const missingField = row.querySelector('[data-field="missing"]');
+  const extraField = row.querySelector('[data-field="extra"]');
+  if (missingField) {
+    missingField.value = String(missing);
+  }
+  if (extraField) {
+    extraField.value = String(extra);
+  }
+}
+
+function syncProductionCreateDraft() {
+  const rows = Array.from(productionCreateItemsList?.querySelectorAll("[data-production-create-row]") || []);
+  rows.forEach((row, index) => {
+    const indexNode = row.querySelector('[data-field="index-label"]');
+    if (indexNode) {
+      indexNode.textContent = String(index + 1);
+    }
+    autoResizeProductionCreateName(row.querySelector('[data-field="name"]'));
+  });
+  if (productionCreateItemsEmpty) {
+    productionCreateItemsEmpty.classList.toggle("hidden", rows.length > 0);
+  }
+}
+
+function buildProductionCreateItemsSummary() {
+  const rows = Array.from(productionCreateItemsList?.querySelectorAll("[data-production-create-row]") || []);
+  return rows
+    .map((row, index) => {
+      const code = String(row.querySelector('[data-field="code"]')?.value || "").trim() || "-";
+      const name = String(row.querySelector('[data-field="name"]')?.value || "").trim();
+      const norm = String(row.querySelector('[data-field="norm"]')?.value || "").trim() || "-";
+      const unit = String(row.querySelector('[data-field="unit"]')?.value || "").trim() || "-";
+      const quantity = String(row.querySelector('[data-field="quantity"]')?.value || "").trim() || "0";
+      const done = String(row.querySelector('[data-field="done"]')?.value || "").trim() || "0";
+      const missing = String(row.querySelector('[data-field="missing"]')?.value || "").trim() || "0";
+      const extra = String(row.querySelector('[data-field="extra"]')?.value || "").trim() || "0";
+      const team = String(row.querySelector('[data-field="team"]')?.value || "").trim() || "-";
+      if (!name && !code) {
+        return "";
+      }
+      return `${index + 1}. ${code} | ${name} | DM ${norm} | ${unit} | SL ${quantity} | Da SX ${done} | Thieu ${missing} | Du ${extra} | To ${team}`;
+    })
+    .filter(Boolean)
+    .join("\n");
+}
+
+function buildProductionCreateNote() {
+  const note = String(productionCreateNote?.value || "").trim();
+  const turnaroundValue = String(
+    productionCreateForm?.querySelector('input[name="production-create-turnaround"]:checked')?.value || "",
+  ).trim();
+  const turnaround =
+    turnaroundValue === "Khac"
+      ? `Khac: ${String(productionCreateTurnaroundOther?.value || "").trim()}`
+      : turnaroundValue;
+  return [note, turnaround ? `De nghi tra hang trong: ${turnaround}` : ""].filter(Boolean).join("\n");
+}
+
+async function handleProductionCreateSubmit(event) {
+  event.preventDefault();
+  if (!canCreateOrder()) {
+    showToast("Ban khong co quyen tao phieu san xuat.", "error");
+    return;
+  }
+
+  const customerName = String(productionCreateCustomerName?.value || "").trim();
+  const requesterId = String(productionCreateRequester?.value || "").trim();
+  const orderItems = buildProductionCreateItemsSummary();
+  if (!customerName || !requesterId) {
+    showToast("Can nhap khach hang va nguoi yeu cau.", "error");
+    return;
+  }
+  if (!orderItems) {
+    showToast("Can co it nhat mot dong san xuat.", "error");
+    return;
+  }
+
+  submitProductionCreateButton && (submitProductionCreateButton.disabled = true);
+  try {
+    const payload = await postJson(orderCreateUrl, {
+      order_id: normalizeOrderIdValue(productionCreateOrderId?.value || ""),
+      customer_name: customerName,
+      sales_user_id: requesterId,
+      delivery_user_id: "",
+      planned_delivery_at: "",
+      delivery_address: "",
+      order_items: orderItems,
+      order_value: "",
+      note: buildProductionCreateNote(),
+      order_kind: "production",
+    });
+    applyOrderPayload(payload);
+    await loadOrders();
+    await loadNotifications({ silent: true });
+    closeProductionCreateScreen({ silent: true });
+    showToast("Da tao phieu san xuat.", "success");
+    await openSection("tracking");
+    setTrackingKind("production");
+  } catch (error) {
+    showToast(error.message || "Khong the tao phieu san xuat.", "error");
+  } finally {
+    submitProductionCreateButton && (submitProductionCreateButton.disabled = false);
+  }
 }
 
 async function loadNotifications(options = {}) {
@@ -1125,15 +1452,6 @@ function buildUserLabel(user) {
 
 function buildDeliveryOptionLabel(order) {
   return `${order.order_id || "-"} • ${order.customer_name || "-"} • ${order.delivery_user_name || "Chua giao NV"}`;
-}
-
-function openNewChat() {
-  const chatUrl = new URL("/", window.location.origin).toString();
-  if (TelegramWebApp?.openLink) {
-    TelegramWebApp.openLink(chatUrl);
-    return;
-  }
-  window.open(chatUrl, "_blank", "noopener");
 }
 
 function formatCompactDateTime(value) {

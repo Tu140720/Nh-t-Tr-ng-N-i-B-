@@ -95,12 +95,18 @@
             <button class="action-card accent-order" data-section="create" type="button">
               <span class="action-title">Tao don</span>
             </button>
+            <div class="create-action-panel hidden" id="create-action-panel">
+              <button class="create-action-option create-action-option-production" id="open-production-create-button" type="button">
+                Tao don san xuat
+              </button>
+              <button class="create-action-option create-action-option-transport" id="open-transport-create-button" type="button">
+                Tao don van chuyen
+              </button>
+            </div>
             <button class="action-card accent-track" data-section="tracking" type="button">
               <span class="action-title">Theo doi don</span>
             </button>
           </div>
-
-          <button class="chat-launch-button" id="new-chat-button" type="button">Doan chat moi</button>
 
           <section class="notification-home-card">
             <div class="notification-section-head">
@@ -271,14 +277,14 @@
           <div class="panel-head">
             <div>
               <p class="panel-kicker">3 / 4</p>
-              <h2>Tao don</h2>
+              <h2>Tao don van chuyen</h2>
             </div>
           </div>
           <div class="panel-subhead">
-            <p class="panel-description">Tao nhanh don van chuyen hoac phieu san xuat bang mot form rut gon, de doc hon tren man hinh rong.</p>
-            <span class="panel-chip">Tao moi</span>
+            <p class="panel-description">Dung form rut gon cho don van chuyen. Neu can tao phieu san xuat, bam lai nut Tao don va chon phieu san xuat.</p>
+            <span class="panel-chip">Van chuyen</span>
           </div>
-          <div class="segment" id="create-kind-switch">
+          <div class="segment hidden" id="create-kind-switch">
             <button class="segment-button is-active" data-order-kind="transport" type="button">Don van chuyen</button>
             <button class="segment-button" data-order-kind="production" type="button">Phieu san xuat</button>
           </div>
@@ -360,6 +366,99 @@
     </div>
 
     <div class="toast-stack" id="toast-stack" aria-live="polite" aria-atomic="true"></div>
+
+    <section class="production-create-screen hidden" id="production-create-screen" aria-hidden="true">
+      <div class="production-rotate-lock" id="production-rotate-lock">
+        <div class="production-rotate-card">
+          <strong>Xoay ngang dien thoai</strong>
+          <p>Phieu san xuat nay duoc toi uu de nhap lieu o che do ngang, giong dang PC hon.</p>
+        </div>
+      </div>
+
+      <div class="production-create-shell">
+        <header class="production-create-head">
+          <div>
+            <p class="production-create-kicker">Dieu phoi</p>
+            <h2>Tao don san xuat moi</h2>
+          </div>
+          <button class="production-close-button" id="close-production-create-button" type="button" aria-label="Dong">×</button>
+        </header>
+
+        <form class="production-create-form" id="production-create-form">
+          <section class="production-sheet-card">
+            <div class="production-sheet-title-wrap">
+              <h3 class="production-sheet-title">Phieu de nghi san xuat theo don dat hang</h3>
+            </div>
+
+            <div class="production-sheet-order-ref">
+              <label class="field">
+                <span>Don dat hang so</span>
+                <div class="production-prefixed-input">
+                  <span>DH</span>
+                  <input id="production-create-order-id" type="text" inputmode="numeric" placeholder="003001" />
+                </div>
+              </label>
+            </div>
+
+            <div class="production-sheet-meta">
+              <label class="field">
+                <span>Khach hang</span>
+                <input id="production-create-customer-name" type="text" placeholder="Ten khach hang / dai ly" />
+              </label>
+              <label class="field">
+                <span>Nguoi yeu cau</span>
+                <select id="production-create-requester"></select>
+              </label>
+              <label class="field">
+                <span>Thoi gian tao phieu</span>
+                <input id="production-create-created-at" type="text" readonly />
+              </label>
+            </div>
+
+            <div class="production-sheet-table">
+              <div class="production-sheet-table-head" aria-hidden="true">
+                <span class="head-cell head-cell-tall head-stt">STT</span>
+                <span class="head-cell head-cell-tall head-code">Ma hang hoa</span>
+                <span class="head-cell head-cell-tall head-name">Ten hang hoa</span>
+                <span class="head-cell head-cell-tall head-norm">Dinh muc thuc</span>
+                <span class="head-cell head-cell-tall head-unit">DVT</span>
+                <span class="head-cell head-cell-tall head-qty">SL</span>
+                <span class="head-cell head-cell-tall head-done">Da SX</span>
+                <span class="head-cell head-cell-tall head-missing">Thieu</span>
+                <span class="head-cell head-cell-tall head-extra">Du</span>
+                <span class="head-cell head-cell-tall head-team">To may</span>
+              </div>
+              <div id="production-create-items-list"></div>
+              <div class="production-items-empty" id="production-create-items-empty">Chua co dong hang hoa san xuat. Bam them de tao dong dau tien.</div>
+            </div>
+
+            <button class="production-add-item-button" id="production-create-add-item-button" type="button">+ Them dong san xuat</button>
+
+            <label class="field">
+              <span>Ghi chu</span>
+              <textarea id="production-create-note" rows="3" placeholder="Kho san xuat, vat tu, luu y cho san xuat..."></textarea>
+            </label>
+
+            <fieldset class="production-turnaround">
+              <legend>De nghi tra hang trong</legend>
+              <label><input type="radio" name="production-create-turnaround" value="24H" /> 24H</label>
+              <label><input type="radio" name="production-create-turnaround" value="48H" /> 48H</label>
+              <label><input type="radio" name="production-create-turnaround" value="72H" checked /> 72H</label>
+              <label class="production-turnaround-other">
+                <input type="radio" name="production-create-turnaround" value="Khac" />
+                <span>Khac</span>
+                <input id="production-create-turnaround-other" type="text" placeholder="..." />
+              </label>
+            </fieldset>
+          </section>
+
+          <div class="production-create-actions">
+            <button class="ghost-button" id="cancel-production-create-button" type="button">Dong</button>
+            <button class="primary-button" id="submit-production-create-button" type="submit">Tao phieu san xuat</button>
+          </div>
+        </form>
+      </div>
+    </section>
 
     <script type="module" src="/telegram/app.js"></script>
   </body>

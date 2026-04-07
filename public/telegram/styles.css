@@ -41,7 +41,7 @@ body {
 }
 
 body.telegram-authenticated {
-  padding-top: 14px;
+  padding: 0;
 }
 
 button,
@@ -65,7 +65,9 @@ button {
 }
 
 body.telegram-authenticated .telegram-shell {
-  width: min(100%, 360px);
+  width: 100%;
+  max-width: none;
+  min-height: 100dvh;
 }
 
 .hero-card,
@@ -308,9 +310,22 @@ body.telegram-authenticated .app-stack {
   gap: 16px;
 }
 
+body.telegram-authenticated .panel-sidebar {
+  min-height: 100dvh;
+  border-radius: 0;
+  border-left: 0;
+  border-right: 0;
+  border-top: 0;
+  padding: 14px 12px 22px;
+}
+
 .action-grid {
   display: grid;
   gap: 12px;
+}
+
+body.telegram-authenticated .action-grid {
+  gap: 10px;
 }
 
 .action-card {
@@ -407,6 +422,33 @@ body.telegram-authenticated .app-stack {
   background: rgba(255, 191, 117, 0.92);
 }
 
+.create-action-panel {
+  display: grid;
+  gap: 8px;
+  margin-top: -4px;
+}
+
+.create-action-option {
+  min-height: 48px;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: rgba(11, 18, 27, 0.92);
+  color: var(--text);
+  text-align: left;
+  padding: 0 14px;
+  font-weight: 700;
+}
+
+.create-action-option-production {
+  border-color: rgba(127, 232, 176, 0.24);
+  background: linear-gradient(180deg, rgba(18, 39, 35, 0.96), rgba(14, 31, 29, 0.98));
+}
+
+.create-action-option-transport {
+  border-color: rgba(143, 211, 255, 0.24);
+  background: linear-gradient(180deg, rgba(22, 38, 50, 0.96), rgba(17, 31, 42, 0.98));
+}
+
 .action-title {
   display: block;
   font-size: 1rem;
@@ -452,19 +494,6 @@ body.telegram-authenticated .app-stack {
   font-size: 0.78rem;
   font-weight: 700;
   white-space: nowrap;
-}
-
-.chat-launch-button {
-  min-height: 54px;
-  border-radius: 14px;
-  border: 0;
-  background: linear-gradient(180deg, rgba(247, 247, 247, 0.98), rgba(228, 228, 228, 0.94));
-  color: #111a23;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.7),
-    0 12px 26px rgba(0, 0, 0, 0.16);
 }
 
 .notification-home-card {
@@ -607,6 +636,307 @@ body.telegram-authenticated .app-stack {
 .notification-divider {
   height: 1px;
   background: linear-gradient(90deg, transparent, rgba(143, 211, 255, 0.14), transparent);
+}
+
+.production-create-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  background:
+    radial-gradient(circle at top, rgba(252, 245, 224, 0.34), transparent 28%),
+    linear-gradient(180deg, #efe3c2 0%, #ebdcc0 52%, #e8d9bf 100%);
+  color: #4a3925;
+}
+
+.production-create-shell {
+  display: grid;
+  min-height: 100dvh;
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+.production-create-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 18px 12px;
+  background: rgba(255, 252, 245, 0.55);
+  border-bottom: 1px solid rgba(123, 100, 64, 0.12);
+  box-shadow: 0 12px 30px rgba(128, 103, 61, 0.12);
+}
+
+.production-create-kicker {
+  margin: 0 0 4px;
+  color: #a89263;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.production-create-head h2 {
+  margin: 0;
+  color: #2e2416;
+  font-size: 1.7rem;
+  letter-spacing: -0.04em;
+}
+
+.production-close-button {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  border: 1px solid rgba(123, 100, 64, 0.14);
+  background: rgba(255, 248, 233, 0.8);
+  color: #4a3925;
+  font-size: 1.8rem;
+  line-height: 1;
+  box-shadow: 0 10px 22px rgba(122, 99, 60, 0.12);
+}
+
+.production-create-form {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: 14px;
+  padding: 14px 18px 18px;
+  min-height: 0;
+}
+
+.production-sheet-card {
+  display: grid;
+  gap: 16px;
+  padding: 14px;
+  border-radius: 20px;
+  border: 1px solid rgba(123, 100, 64, 0.14);
+  background:
+    linear-gradient(180deg, rgba(255, 249, 235, 0.84), rgba(246, 233, 203, 0.84)),
+    rgba(255, 249, 235, 0.84);
+  box-shadow: 0 20px 40px rgba(122, 99, 60, 0.12);
+}
+
+.production-sheet-title-wrap {
+  text-align: center;
+}
+
+.production-sheet-title {
+  margin: 0;
+  color: #4a3925;
+  text-transform: uppercase;
+  font-size: clamp(1.05rem, 2vw, 2rem);
+  letter-spacing: -0.02em;
+}
+
+.production-sheet-order-ref {
+  width: min(100%, 420px);
+  margin: 0 auto;
+}
+
+.production-prefixed-input {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr);
+  align-items: stretch;
+  border: 1px solid rgba(123, 100, 64, 0.16);
+  border-radius: 14px;
+  overflow: hidden;
+  background: rgba(255, 252, 245, 0.8);
+}
+
+.production-prefixed-input span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-right: 1px solid rgba(123, 100, 64, 0.12);
+  font-weight: 800;
+  color: #5f4a2f;
+}
+
+.production-prefixed-input input {
+  border: 0;
+  background: transparent;
+}
+
+.production-sheet-card .field span,
+.production-turnaround legend,
+.production-sheet-table-head span {
+  color: #6f5a3e;
+}
+
+.production-sheet-card .field input,
+.production-sheet-card .field select,
+.production-sheet-card .field textarea {
+  border-color: rgba(123, 100, 64, 0.16);
+  background: rgba(255, 252, 245, 0.82);
+  color: #342718;
+}
+
+.production-sheet-card .field input:focus,
+.production-sheet-card .field select:focus,
+.production-sheet-card .field textarea:focus {
+  border-color: rgba(169, 134, 76, 0.6);
+  box-shadow: 0 0 0 4px rgba(187, 154, 99, 0.14);
+  background: rgba(255, 252, 245, 0.96);
+}
+
+.production-sheet-meta {
+  display: grid;
+  gap: 12px;
+}
+
+.production-sheet-table {
+  overflow: auto;
+  border: 1px solid rgba(98, 79, 49, 0.18);
+  background: rgba(255, 250, 238, 0.72);
+}
+
+.production-sheet-table-head,
+.production-create-row {
+  display: grid;
+  min-width: 1068px;
+  grid-template-columns: 56px 128px minmax(280px, 1.8fr) 120px 88px 78px 78px 78px 78px 86px;
+}
+
+.production-sheet-table-head {
+  background: rgba(234, 219, 189, 0.9);
+}
+
+.production-sheet-table-head .head-cell,
+.production-create-row > * {
+  min-height: 56px;
+  border-right: 1px solid rgba(98, 79, 49, 0.18);
+  border-bottom: 1px solid rgba(98, 79, 49, 0.18);
+}
+
+.production-sheet-table-head .head-cell:last-child,
+.production-create-row > *:last-child {
+  border-right: 0;
+}
+
+.production-sheet-table-head .head-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  text-align: center;
+  font-weight: 800;
+}
+
+.production-create-row {
+  background: rgba(255, 252, 245, 0.68);
+}
+
+.production-create-row > input,
+.production-create-row > select,
+.production-create-row > textarea,
+.production-create-index {
+  width: 100%;
+  min-height: 56px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #342718;
+  padding: 10px 12px;
+}
+
+.production-create-row > textarea {
+  resize: vertical;
+}
+
+.production-create-index {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+}
+
+.production-items-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 62px;
+  padding: 12px;
+  color: #7f7260;
+  background: rgba(156, 154, 149, 0.88);
+}
+
+.production-add-item-button {
+  width: fit-content;
+  min-height: 46px;
+  padding: 0 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(123, 100, 64, 0.14);
+  background: rgba(255, 250, 241, 0.92);
+  color: #4a3925;
+  font-weight: 700;
+}
+
+.production-turnaround {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 18px;
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid rgba(123, 100, 64, 0.12);
+  border-radius: 14px;
+}
+
+.production-turnaround label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #4a3925;
+}
+
+.production-turnaround-other {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.production-turnaround-other input[type="text"] {
+  width: 90px;
+  min-height: 36px;
+  border: 1px solid rgba(123, 100, 64, 0.16);
+  border-radius: 10px;
+  background: rgba(255, 252, 245, 0.82);
+  color: #342718;
+  padding: 0 10px;
+}
+
+.production-create-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.production-rotate-lock {
+  display: none;
+  position: absolute;
+  inset: 0;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(243, 231, 204, 0.96);
+}
+
+.production-rotate-card {
+  width: min(340px, 100%);
+  padding: 22px 18px;
+  border-radius: 20px;
+  border: 1px solid rgba(123, 100, 64, 0.14);
+  background: rgba(255, 251, 242, 0.96);
+  text-align: center;
+  box-shadow: 0 18px 40px rgba(122, 99, 60, 0.14);
+}
+
+.production-rotate-card strong {
+  display: block;
+  color: #3c2f1f;
+  font-size: 1.2rem;
+}
+
+.production-rotate-card p {
+  margin: 10px 0 0;
+  color: #6f5a3e;
+  line-height: 1.55;
 }
 
 .compact-grid {
@@ -861,7 +1191,7 @@ body.telegram-authenticated .app-stack {
   }
 
   body.telegram-authenticated .telegram-shell {
-    width: min(100%, 420px);
+    width: 100%;
   }
 
   .login-layout {
@@ -874,6 +1204,14 @@ body.telegram-authenticated .app-stack {
   }
 
   .metrics-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .create-action-panel {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .production-sheet-meta {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
@@ -917,7 +1255,7 @@ body.telegram-authenticated .app-stack {
   }
 
   body.telegram-authenticated .telegram-shell {
-    width: min(100%, 430px);
+    width: 100%;
   }
 
   body.telegram-authenticated .app-stack {
@@ -1043,6 +1381,22 @@ body.telegram-authenticated .app-stack {
   .segment {
     max-width: 460px;
   }
+
+  body.telegram-authenticated .panel-sidebar {
+    max-width: 440px;
+    margin: 0 auto;
+    border-left: 1px solid var(--line);
+    border-right: 1px solid var(--line);
+  }
+
+  .production-create-shell {
+    width: min(100%, 1320px);
+    margin: 0 auto;
+  }
+
+  .production-sheet-card {
+    padding: 18px;
+  }
 }
 
 @media (max-width: 420px) {
@@ -1062,5 +1416,43 @@ body.telegram-authenticated .app-stack {
 
   .panel-subhead {
     flex-direction: column;
+  }
+}
+
+@media (max-width: 960px) and (orientation: portrait) {
+  body.production-create-open {
+    overflow: hidden;
+  }
+
+  body.production-create-open .production-create-form {
+    display: none;
+  }
+
+  body.production-create-open .production-rotate-lock {
+    display: flex;
+  }
+}
+
+@media (max-width: 960px) and (orientation: landscape) {
+  body.production-create-open {
+    overflow: hidden;
+  }
+
+  .production-create-head {
+    padding: 10px 14px 8px;
+  }
+
+  .production-create-head h2 {
+    font-size: 1.3rem;
+  }
+
+  .production-create-form {
+    gap: 10px;
+    padding: 10px 14px 12px;
+  }
+
+  .production-sheet-card {
+    gap: 12px;
+    padding: 12px;
   }
 }
