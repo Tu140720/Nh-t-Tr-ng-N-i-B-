@@ -368,29 +368,24 @@
     <div class="toast-stack" id="toast-stack" aria-live="polite" aria-atomic="true"></div>
 
     <section class="production-create-screen hidden" id="production-create-screen" aria-hidden="true">
-      <div class="production-rotate-lock" id="production-rotate-lock">
-        <div class="production-rotate-card">
-          <strong>Xoay ngang dien thoai</strong>
-          <p>Phieu san xuat nay duoc toi uu de nhap lieu o che do ngang, giong dang PC hon.</p>
-        </div>
-      </div>
-
       <div class="production-create-shell">
         <header class="production-create-head">
           <div>
             <p class="production-create-kicker">Dieu phoi</p>
             <h2>Tao don san xuat moi</h2>
           </div>
-          <button class="production-close-button" id="close-production-create-button" type="button" aria-label="Dong">×</button>
+          <button class="production-close-button" id="close-production-create-button" type="button" aria-label="Dong">x</button>
         </header>
 
         <form class="production-create-form" id="production-create-form">
-          <section class="production-sheet-card">
-            <div class="production-sheet-title-wrap">
-              <h3 class="production-sheet-title">Phieu de nghi san xuat theo don dat hang</h3>
-            </div>
+          <div class="production-create-mobile-tip">
+            <strong>Co the vuot ngang va vuot doc</strong>
+            <span>Xoay ngang dien thoai se de nhap lieu hon, nhung ban van co the keo sang ngang hoac vuot xuong duoi de xem du tat ca cot.</span>
+          </div>
 
-            <div class="production-sheet-order-ref">
+          <section class="production-sheet-card">
+            <div class="production-sheet-header">
+              <h3 class="production-sheet-title">Phieu de nghi san xuat theo don dat hang</h3>
               <label class="field">
                 <span>Don dat hang so</span>
                 <div class="production-prefixed-input">
@@ -423,9 +418,10 @@
                 <span class="head-cell head-cell-tall head-norm">Dinh muc thuc</span>
                 <span class="head-cell head-cell-tall head-unit">DVT</span>
                 <span class="head-cell head-cell-tall head-qty">SL</span>
-                <span class="head-cell head-cell-tall head-done">Da SX</span>
-                <span class="head-cell head-cell-tall head-missing">Thieu</span>
-                <span class="head-cell head-cell-tall head-extra">Du</span>
+                <span class="head-cell head-cell-group head-status">Tinh trang</span>
+                <span class="head-cell head-cell-sub head-done">Da SX</span>
+                <span class="head-cell head-cell-sub head-missing">Thieu</span>
+                <span class="head-cell head-cell-sub head-extra">Du</span>
                 <span class="head-cell head-cell-tall head-team">To may</span>
               </div>
               <div id="production-create-items-list"></div>
@@ -450,6 +446,29 @@
                 <input id="production-create-turnaround-other" type="text" placeholder="..." />
               </label>
             </fieldset>
+
+            <div class="production-signatures" aria-hidden="true">
+              <div class="production-signature-box">
+                <strong>Nguoi yeu cau</strong>
+                <span>Ky va ghi ro ho ten</span>
+                <p class="production-signature-name" id="production-create-requester-signature">-</p>
+              </div>
+              <div class="production-signature-box">
+                <strong>Nguoi thuc hien</strong>
+                <span>Ky va ghi ro ho ten</span>
+                <div class="production-signature-name production-signature-list" id="production-create-performer-signature">-</div>
+              </div>
+              <div class="production-signature-box">
+                <strong>Dong goi</strong>
+                <span>Ky va ghi ro ho ten</span>
+                <div class="production-signature-name production-signature-list" id="production-create-packaging-signature">-</div>
+              </div>
+              <div class="production-signature-box">
+                <strong>Giao nhan</strong>
+                <span>Ky va ghi ro ho ten</span>
+                <div class="production-signature-name production-signature-list" id="production-create-receipt-signature">-</div>
+              </div>
+            </div>
           </section>
 
           <div class="production-create-actions">

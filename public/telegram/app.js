@@ -122,6 +122,10 @@ const productionCreateItemsEmpty = document.querySelector("#production-create-it
 const productionCreateAddItemButton = document.querySelector("#production-create-add-item-button");
 const productionCreateNote = document.querySelector("#production-create-note");
 const productionCreateTurnaroundOther = document.querySelector("#production-create-turnaround-other");
+const productionCreateRequesterSignature = document.querySelector("#production-create-requester-signature");
+const productionCreatePerformerSignature = document.querySelector("#production-create-performer-signature");
+const productionCreatePackagingSignature = document.querySelector("#production-create-packaging-signature");
+const productionCreateReceiptSignature = document.querySelector("#production-create-receipt-signature");
 const closeProductionCreateButton = document.querySelector("#close-production-create-button");
 const cancelProductionCreateButton = document.querySelector("#cancel-production-create-button");
 const submitProductionCreateButton = document.querySelector("#submit-production-create-button");
@@ -149,13 +153,24 @@ async function init() {
 }
 
 function initTelegramShell() {
+  updateTelegramViewportMetrics();
+  window.addEventListener("resize", updateTelegramViewportMetrics);
+  window.visualViewport?.addEventListener("resize", updateTelegramViewportMetrics);
+
   if (!TelegramWebApp) {
     heroUserMeta.textContent = "Dang test tren browser";
     return;
   }
 
   TelegramWebApp.ready();
-  TelegramWebApp.expand();
+  requestTelegramFullscreen();
+  if (TelegramWebApp.onEvent) {
+    try {
+      TelegramWebApp.onEvent("viewportChanged", updateTelegramViewportMetrics);
+    } catch {
+      void 0;
+    }
+  }
   if (TelegramWebApp.setHeaderColor) {
     try {
       TelegramWebApp.setHeaderColor("#101b27");
@@ -187,6 +202,7 @@ function bindEvents() {
   closeProductionCreateButton?.addEventListener("click", closeProductionCreateScreen);
   cancelProductionCreateButton?.addEventListener("click", closeProductionCreateScreen);
   productionCreateAddItemButton?.addEventListener("click", () => addProductionCreateItemRow());
+  productionCreateRequester?.addEventListener("change", syncProductionCreateRequesterSignature);
   productionCreateForm?.addEventListener("submit", handleProductionCreateSubmit);
   actionButtons.forEach((button) => {
     button.addEventListener("click", () => {
@@ -289,6 +305,7 @@ function showLoginPanel() {
 function showWorkspacePanel() {
   loginPanel?.classList.add("hidden");
   workspacePanel?.classList.remove("hidden");
+  requestTelegramFullscreen();
 }
 
 function hideAllFeaturePanels() {
@@ -372,14 +389,22 @@ async function openProductionCreateScreen() {
   }
   await Promise.all([loadUsers(), loadOrders()]);
   state.productionCreateOpen = true;
+  requestTelegramFullscreen();
+  setTelegramVerticalSwipesDisabled(true);
   document.body.classList.add("production-create-open");
   productionCreateScreen?.classList.remove("hidden");
   productionCreateScreen?.setAttribute("aria-hidden", "false");
   resetProductionCreateForm();
+  if (productionCreateForm) {
+    productionCreateForm.scrollTop = 0;
+    productionCreateForm.scrollLeft = 0;
+  }
+  productionCreateCustomerName?.focus();
 }
 
 function closeProductionCreateScreen(options = {}) {
   state.productionCreateOpen = false;
+  setTelegramVerticalSwipesDisabled(false);
   document.body.classList.remove("production-create-open");
   productionCreateScreen?.classList.add("hidden");
   productionCreateScreen?.setAttribute("aria-hidden", "true");
@@ -543,6 +568,53 @@ function getNextProductionOrderSequence() {
   return formatOrderSequenceValue(Math.max(3000, maxValue + 1));
 }
 
+function updateTelegramViewportMetrics() {
+  const viewportHeight = Number(TelegramWebApp?.viewportHeight || window.visualViewport?.height || window.innerHeight || 0);
+  const stableHeight = Number(TelegramWebApp?.viewportStableHeight || viewportHeight || window.innerHeight || 0);
+  const viewportWidth = Number(window.visualViewport?.width || window.innerWidth || 0);
+  if (stableHeight > 0) {
+    document.documentElement.style.setProperty("--tg-app-height", `${Math.round(stableHeight)}px`);
+  }
+  if (viewportHeight > 0) {
+    document.documentElement.style.setProperty("--tg-app-live-height", `${Math.round(viewportHeight)}px`);
+  }
+  if (viewportWidth > 0) {
+    document.documentElement.style.setProperty("--tg-app-width", `${Math.round(viewportWidth)}px`);
+  }
+}
+
+function requestTelegramFullscreen() {
+  updateTelegramViewportMetrics();
+  if (!TelegramWebApp) {
+    return;
+  }
+  try {
+    TelegramWebApp.expand();
+  } catch {
+    void 0;
+  }
+  try {
+    TelegramWebApp.requestFullscreen?.();
+  } catch {
+    void 0;
+  }
+}
+
+function setTelegramVerticalSwipesDisabled(disabled) {
+  if (!TelegramWebApp) {
+    return;
+  }
+  try {
+    if (disabled) {
+      TelegramWebApp.disableVerticalSwipes?.();
+    } else {
+      TelegramWebApp.enableVerticalSwipes?.();
+    }
+  } catch {
+    void 0;
+  }
+}
+
 function buildProductionUnitOptions(selectedUnit = "") {
   const normalizedSelected = String(selectedUnit || DEFAULT_PRODUCTION_UNITS[0] || "").trim();
   return DEFAULT_PRODUCTION_UNITS.map(
@@ -562,7 +634,17 @@ function resetProductionCreateForm() {
   if (productionCreateItemsList) {
     productionCreateItemsList.innerHTML = "";
   }
+  if (productionCreatePerformerSignature) {
+    productionCreatePerformerSignature.textContent = "-";
+  }
+  if (productionCreatePackagingSignature) {
+    productionCreatePackagingSignature.textContent = "-";
+  }
+  if (productionCreateReceiptSignature) {
+    productionCreateReceiptSignature.textContent = "-";
+  }
   addProductionCreateItemRow();
+  syncProductionCreateRequesterSignature();
   syncProductionCreateDraft();
 }
 
@@ -598,6 +680,15 @@ function populateProductionCreateRequesterOptions() {
     : '<option value="">Khong co nguoi yeu cau phu hop</option>';
 
   productionCreateRequester.disabled = !canChoose;
+  syncProductionCreateRequesterSignature();
+}
+
+function syncProductionCreateRequesterSignature() {
+  if (!productionCreateRequesterSignature) {
+    return;
+  }
+  const selectedText = String(productionCreateRequester?.selectedOptions?.[0]?.textContent || "").trim();
+  productionCreateRequesterSignature.textContent = selectedText ? selectedText.split("•")[0].trim() : "-";
 }
 
 function addProductionCreateItemRow(values = {}) {
@@ -609,16 +700,18 @@ function addProductionCreateItemRow(values = {}) {
   row.className = "production-create-row";
   row.setAttribute("data-production-create-row", "true");
   row.innerHTML = `
-    <div class="production-create-index" data-field="index-label">1</div>
-    <input data-field="code" type="text" value="${escapeHtml(values.code || "")}" />
-    <textarea data-field="name" rows="1" placeholder="Ten hang hoa">${escapeHtml(values.name || "")}</textarea>
-    <input data-field="norm" type="text" value="${escapeHtml(values.norm || "")}" />
-    <select data-field="unit">${buildProductionUnitOptions(values.unit || "")}</select>
-    <input data-field="quantity" type="number" min="0" step="1" value="${escapeHtml(values.quantity || "")}" />
-    <input data-field="done" type="number" min="0" step="1" value="${escapeHtml(values.done || "0")}" />
-    <input data-field="missing" type="number" min="0" step="1" value="${escapeHtml(values.missing || "0")}" />
-    <input data-field="extra" type="number" min="0" step="1" value="${escapeHtml(values.extra || "0")}" />
-    <input data-field="team" type="text" value="${escapeHtml(values.team || "")}" />
+    <div class="production-create-index"><span data-field="index-label">1</span></div>
+    <input class="production-create-code" data-field="code" type="text" value="${escapeHtml(values.code || "")}" />
+    <div class="production-create-name-wrap">
+      <textarea class="production-create-name" data-field="name" rows="1" placeholder="Ten hang hoa">${escapeHtml(values.name || "")}</textarea>
+    </div>
+    <input class="production-create-norm" data-field="norm" type="text" value="${escapeHtml(values.norm || "")}" />
+    <select class="production-create-unit" data-field="unit">${buildProductionUnitOptions(values.unit || "")}</select>
+    <input class="production-create-quantity" data-field="quantity" type="number" min="0" step="1" value="${escapeHtml(values.quantity || "")}" />
+    <input class="production-create-done" data-field="done" type="number" min="0" step="1" value="${escapeHtml(values.done || "0")}" />
+    <input class="production-create-missing" data-field="missing" type="number" min="0" step="1" value="${escapeHtml(values.missing || "0")}" />
+    <input class="production-create-extra" data-field="extra" type="number" min="0" step="1" value="${escapeHtml(values.extra || "0")}" />
+    <input class="production-create-team" data-field="team" type="number" min="0" step="1" value="${escapeHtml(values.team || "")}" />
   `;
 
   row.querySelectorAll('input[data-field="quantity"], input[data-field="done"]').forEach((input) => {
