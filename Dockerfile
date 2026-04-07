@@ -17,9 +17,6 @@ RUN mkdir -p /app/data /app/bootstrap-data && \
     chmod +x /app/scripts/render-entrypoint.sh
 
 ENV NODE_ENV=production
-ENV PORT=10000
-
-EXPOSE 10000
 
 ENTRYPOINT ["/app/scripts/render-entrypoint.sh"]
 CMD ["node", "server.mjs"]
