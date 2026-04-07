@@ -329,15 +329,15 @@ async function handleRequest(request, response) {
       return serveStaticFile(requestUrl.pathname, response);
     }
 
-    requireAuthenticatedUser(currentUser);
-
     if (request.method === "GET" && requestUrl.pathname === "/api/health") {
       const syncInfo = await maybeSyncSheetSources();
       const repo = await loadInternalRepository(config.internalDocsDir, config.cwd);
       const allSources = await listSyncSources(config.sourcesDir, config.internalDocsDir, config.cwd);
-      const visibleSources = allSources.filter((source) => canViewDocument(currentUser, source));
-      const visibleDocuments = filterDocumentsForUser(repo.documents, currentUser);
-      const visibleChunks = filterChunksForUser(repo.chunks, currentUser);
+      const visibleSources = currentUser
+        ? allSources.filter((source) => canViewDocument(currentUser, source))
+        : allSources;
+      const visibleDocuments = currentUser ? filterDocumentsForUser(repo.documents, currentUser) : repo.documents;
+      const visibleChunks = currentUser ? filterChunksForUser(repo.chunks, currentUser) : repo.chunks;
       return sendJson(response, 200, {
         status: "ok",
         aiEnabled: isGeminiEnabled(config),
@@ -345,11 +345,13 @@ async function handleRequest(request, response) {
         documentCount: visibleDocuments.length,
         chunkCount: visibleChunks.length,
         sourceCount: visibleSources.length,
-        currentUser: sanitizeUser(currentUser),
-        canManagePermissions: canManagePermissions(currentUser),
+        currentUser: currentUser ? sanitizeUser(currentUser) : null,
+        canManagePermissions: currentUser ? canManagePermissions(currentUser) : false,
         sheetSync: syncInfo,
       });
     }
+
+    requireAuthenticatedUser(currentUser);
 
     if (request.method === "GET" && requestUrl.pathname === "/api/users") {
       return sendJson(response, 200, {
