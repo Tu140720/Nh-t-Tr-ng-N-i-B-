@@ -3,3 +3,5 @@ node_modules/
 npm-debug.log*
 .render/
 .DS_Store
+data/users/sessions.json
+data/telegram/links.json

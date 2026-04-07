@@ -9,19 +9,37 @@ const notificationsReadUrl = "/api/notifications/read";
 const notificationsReadAllUrl = "/api/notifications/read-all";
 const deliveryCompleteUrl = "/api/delivery/complete";
 const orderCreateUrl = "/api/orders/create";
+const orderProductsUrl = "/api/order-products";
 const tapeCalculatorConfigUrl = "/api/tape-calculator/config";
+const telegramLoginUrl = "/api/telegram/login";
+const telegramLinkUrl = "/api/telegram/link";
 
 const AUTH_STORAGE_KEY = "telegramMiniAuthToken";
+const TELEGRAM_LINK_STORAGE_KEY = "telegramMiniLinkedAccount";
 const NOTIFICATION_ARCHIVE_STORAGE_PREFIX = "telegramMiniNotificationArchive";
 const NOTIFICATION_ARCHIVE_MAX_ITEMS = 50;
 const NOTIFICATION_POLL_INTERVAL_MS = 30_000;
 const DEFAULT_PRODUCTION_UNITS = ["cay", "cuon", "kg", "tam", "bao"];
+const DEFAULT_ORDER_PRODUCTS = [
+  { id: "foam-10", name: "Xop no 10cm", units: ["cuon"], default_unit: "cuon" },
+  { id: "foam-20", name: "Xop no 20cm", units: ["cuon"], default_unit: "cuon" },
+  { id: "foam-30", name: "Xop no 30cm", units: ["cuon"], default_unit: "cuon" },
+  { id: "foam-40", name: "Xop no 40cm", units: ["cuon"], default_unit: "cuon" },
+  { id: "foam-50", name: "Xop no 50cm", units: ["cuon"], default_unit: "cuon" },
+  { id: "foam-60", name: "Xop no 60cm", units: ["cuon"], default_unit: "cuon" },
+  { id: "tape-1kg", name: "Bang dinh vang 1kg", units: ["cuon"], default_unit: "cuon" },
+  { id: "tape-500g", name: "Bang dinh vang 500g", units: ["cuon"], default_unit: "cuon" },
+  { id: "core-n3", name: "Loi nhua N3", units: ["cay"], default_unit: "cay" },
+  { id: "core-n5", name: "Loi nhua N5", units: ["cay"], default_unit: "cay" },
+  { id: "core-n6", name: "Loi nhua N6", units: ["cay"], default_unit: "cay" },
+];
 
 const state = {
   authToken: localStorage.getItem(AUTH_STORAGE_KEY) || "",
   currentUser: null,
   users: [],
   orders: [],
+  orderProducts: [],
   notifications: [],
   notificationArchive: [],
   notificationFilter: "all",
@@ -149,6 +167,10 @@ async function init() {
       return;
     }
   }
+  const telegramRestored = await restoreSessionFromTelegram();
+  if (telegramRestored) {
+    return;
+  }
   showLoginPanel();
 }
 
@@ -204,6 +226,11 @@ function bindEvents() {
   productionCreateAddItemButton?.addEventListener("click", () => addProductionCreateItemRow());
   productionCreateRequester?.addEventListener("change", syncProductionCreateRequesterSignature);
   productionCreateForm?.addEventListener("submit", handleProductionCreateSubmit);
+  productionCreateItemsList?.addEventListener("input", handleProductionCreateOrderItemInput);
+  productionCreateItemsList?.addEventListener("focusin", handleProductionCreateOrderItemFocus);
+  productionCreateItemsList?.addEventListener("keydown", handleProductionCreateOrderItemKeydown);
+  productionCreateItemsList?.addEventListener("click", handleProductionCreateOrderItemClick);
+  document.addEventListener("pointerdown", handleProductionCreateOrderItemOutsideClick);
   actionButtons.forEach((button) => {
     button.addEventListener("click", () => {
       const section = button.dataset.section || "";
@@ -263,7 +290,6 @@ async function restoreSession() {
     const payload = await fetchJson(sessionUrl);
     if (!payload.authenticated || !payload.currentUser) {
       clearAuth();
-      showLoginPanel();
       return false;
     }
     state.currentUser = payload.currentUser;
@@ -271,7 +297,28 @@ async function restoreSession() {
     return true;
   } catch {
     clearAuth();
-    showLoginPanel();
+    return false;
+  }
+}
+
+async function restoreSessionFromTelegram() {
+  const initData = getTelegramInitData();
+  if (!initData) {
+    return false;
+  }
+
+  try {
+    const payload = await postJson(
+      telegramLoginUrl,
+      {
+        init_data: initData,
+      },
+      { skipAuth: true },
+    );
+    finishLogin(payload.token, payload.currentUser);
+    await bootstrapWorkspace();
+    return true;
+  } catch {
     return false;
   }
 }
@@ -279,8 +326,9 @@ async function restoreSession() {
 async function bootstrapWorkspace() {
   showWorkspacePanel();
   renderHeroUser();
-  await Promise.all([loadUsers(), loadOrders()]);
+  await Promise.all([loadUsers(), loadOrders(), loadOrderProducts()]);
   await loadNotifications({ silent: true });
+  await syncTelegramLink();
   applyPermissionState();
   populateCreateUserOptions();
   populateDeliverySalesOptions();
@@ -387,10 +435,9 @@ async function openProductionCreateScreen() {
     showToast("Ban khong co quyen tao phieu san xuat.", "error");
     return;
   }
-  await Promise.all([loadUsers(), loadOrders()]);
+  await Promise.all([loadUsers(), loadOrders(), loadOrderProducts()]);
   state.productionCreateOpen = true;
   requestTelegramFullscreen();
-  setTelegramVerticalSwipesDisabled(true);
   document.body.classList.add("production-create-open");
   productionCreateScreen?.classList.remove("hidden");
   productionCreateScreen?.setAttribute("aria-hidden", "false");
@@ -404,7 +451,6 @@ async function openProductionCreateScreen() {
 
 function closeProductionCreateScreen(options = {}) {
   state.productionCreateOpen = false;
-  setTelegramVerticalSwipesDisabled(false);
   document.body.classList.remove("production-create-open");
   productionCreateScreen?.classList.add("hidden");
   productionCreateScreen?.setAttribute("aria-hidden", "true");
@@ -544,6 +590,52 @@ async function loadOrders() {
   renderTrackingOrders();
 }
 
+async function loadOrderProducts() {
+  try {
+    const payload = await fetchJson(orderProductsUrl);
+    state.orderProducts = getSortedOrderProducts(
+      Array.isArray(payload.products) && payload.products.length ? payload.products : DEFAULT_ORDER_PRODUCTS,
+    );
+  } catch {
+    state.orderProducts = getSortedOrderProducts(DEFAULT_ORDER_PRODUCTS);
+  }
+}
+
+function getTelegramInitData() {
+  return String(TelegramWebApp?.initData || "").trim();
+}
+
+function getTelegramLinkedCacheValue() {
+  const currentUserId = String(state.currentUser?.id || "").trim();
+  const telegramUserId = String(TelegramWebApp?.initDataUnsafe?.user?.id || "").trim();
+  if (!currentUserId || !telegramUserId) {
+    return "";
+  }
+  return `${currentUserId}:${telegramUserId}`;
+}
+
+async function syncTelegramLink() {
+  if (!TelegramWebApp || !state.authToken || !state.currentUser) {
+    return;
+  }
+
+  const initData = getTelegramInitData();
+  const cacheValue = getTelegramLinkedCacheValue();
+  if (!initData || !cacheValue) {
+    return;
+  }
+  if (localStorage.getItem(TELEGRAM_LINK_STORAGE_KEY) === cacheValue) {
+    return;
+  }
+
+  try {
+    await postJson(telegramLinkUrl, { init_data: initData });
+    localStorage.setItem(TELEGRAM_LINK_STORAGE_KEY, cacheValue);
+  } catch {
+    void 0;
+  }
+}
+
 function extractOrderSequenceValue(value) {
   const match = String(value || "")
     .trim()
@@ -615,11 +707,220 @@ function setTelegramVerticalSwipesDisabled(disabled) {
   }
 }
 
-function buildProductionUnitOptions(selectedUnit = "") {
-  const normalizedSelected = String(selectedUnit || DEFAULT_PRODUCTION_UNITS[0] || "").trim();
-  return DEFAULT_PRODUCTION_UNITS.map(
-    (unit) => `<option value="${escapeHtml(unit)}" ${unit === normalizedSelected ? "selected" : ""}>${escapeHtml(unit)}</option>`,
-  ).join("");
+function getSortedOrderProducts(products = null) {
+  const source = Array.isArray(products) ? products : state.orderProducts.length ? state.orderProducts : DEFAULT_ORDER_PRODUCTS;
+  return [...source].sort((left, right) =>
+    String(left?.name || "").localeCompare(String(right?.name || ""), "vi", { numeric: true, sensitivity: "base" }),
+  );
+}
+
+function getOrderItemSuggestions(query = "") {
+  const normalizedQuery = String(query || "").trim().toLowerCase();
+  const products = getSortedOrderProducts()
+    .map((item) => ({
+      name: String(item?.name || "").trim(),
+      code: String(item?.code || "").trim(),
+    }))
+    .filter((item) => item.name);
+
+  if (!normalizedQuery) {
+    return products;
+  }
+
+  return products
+    .filter((item) => item.name.toLowerCase().includes(normalizedQuery) || item.code.toLowerCase().includes(normalizedQuery))
+    .sort((left, right) => {
+      const leftStarts = left.name.toLowerCase().startsWith(normalizedQuery) || left.code.toLowerCase().startsWith(normalizedQuery) ? 0 : 1;
+      const rightStarts = right.name.toLowerCase().startsWith(normalizedQuery) || right.code.toLowerCase().startsWith(normalizedQuery) ? 0 : 1;
+      if (leftStarts !== rightStarts) {
+        return leftStarts - rightStarts;
+      }
+      return left.name.localeCompare(right.name, "vi", { numeric: true, sensitivity: "base" });
+    });
+}
+
+function buildHighlightedOrderItemLabel(item, query = "") {
+  const code = String(item?.code || "").trim();
+  const name = String(item?.name || "").trim();
+  const displaySource = code ? `${code} - ${name}` : name;
+  const source = code ? `${code} • ${name}` : name;
+  const normalizedQuery = String(query || "").trim().toLowerCase();
+  if (!normalizedQuery) {
+    return escapeHtml(displaySource);
+  }
+
+  const matchIndex = displaySource.toLowerCase().indexOf(normalizedQuery);
+  if (matchIndex < 0) {
+    return escapeHtml(displaySource);
+  }
+
+  const before = displaySource.slice(0, matchIndex);
+  const match = displaySource.slice(matchIndex, matchIndex + normalizedQuery.length);
+  const after = displaySource.slice(matchIndex + normalizedQuery.length);
+  return `${escapeHtml(before)}<span class="order-item-suggestion-match">${escapeHtml(match)}</span>${escapeHtml(after)}`;
+}
+
+function resolveOrderProductConfig(productName = "") {
+  const normalizedName = String(productName || "").trim().toLowerCase();
+  return getSortedOrderProducts().find((item) => String(item?.name || "").trim().toLowerCase() === normalizedName) || null;
+}
+
+function buildProductionUnitOptions(productName = "", selectedUnit = "") {
+  const config = resolveOrderProductConfig(productName);
+  const units =
+    Array.isArray(config?.units) && config.units.length ? config.units : DEFAULT_PRODUCTION_UNITS;
+  const normalizedSelected = String(selectedUnit || config?.default_unit || units[0] || "").trim();
+  return units
+    .map((unit) => `<option value="${escapeHtml(unit)}" ${unit === normalizedSelected ? "selected" : ""}>${escapeHtml(unit)}</option>`)
+    .join("");
+}
+
+function findOrderProductByName(productName = "") {
+  const normalizedName = String(productName || "").trim().toLowerCase();
+  if (!normalizedName) {
+    return null;
+  }
+  return getSortedOrderProducts().find((item) => String(item?.name || "").trim().toLowerCase() === normalizedName) || null;
+}
+
+function findOrderProductByCode(productCode = "") {
+  const normalizedCode = String(productCode || "").trim().toLowerCase();
+  if (!normalizedCode) {
+    return null;
+  }
+  return getSortedOrderProducts().find((item) => String(item?.code || "").trim().toLowerCase() === normalizedCode) || null;
+}
+
+function closeProductionCreateOrderItemSuggestions(exceptInput = null) {
+  Array.from(productionCreateItemsList?.querySelectorAll(".order-item-name-wrap") || []).forEach((wrap) => {
+    const input = wrap.querySelector('[data-field="name"]');
+    if (exceptInput && input === exceptInput) {
+      return;
+    }
+    wrap.dataset.expanded = "false";
+    wrap.dataset.activeIndex = "-1";
+    const panel = wrap.querySelector(".order-item-suggestions");
+    if (panel) {
+      panel.innerHTML = "";
+      panel.classList.add("hidden");
+    }
+  });
+}
+
+function setActiveProductionCreateOrderItemSuggestion(wrap, nextIndex) {
+  if (!wrap) {
+    return;
+  }
+  const buttons = Array.from(wrap.querySelectorAll("[data-order-item-option]"));
+  if (!buttons.length) {
+    wrap.dataset.activeIndex = "-1";
+    return;
+  }
+  const boundedIndex = Math.max(0, Math.min(nextIndex, buttons.length - 1));
+  wrap.dataset.activeIndex = String(boundedIndex);
+  buttons.forEach((button, index) => {
+    button.classList.toggle("active", index === boundedIndex);
+  });
+  buttons[boundedIndex]?.scrollIntoView({ block: "nearest" });
+}
+
+function renderProductionCreateOrderItemSuggestions(input, queryOverride = null) {
+  const wrap = input?.closest(".order-item-name-wrap");
+  const panel = wrap?.querySelector(".order-item-suggestions");
+  if (!wrap || !panel || !input) {
+    return;
+  }
+
+  const query = queryOverride === null ? input.value : queryOverride;
+  const suggestions = getOrderItemSuggestions(query);
+  const searchMarkup = `
+    <div class="order-item-suggestions-search">
+      <input
+        type="text"
+        class="order-item-suggestion-search-input"
+        data-order-item-search
+        placeholder="Tim san pham..."
+        value="${escapeHtml(query)}"
+        autocomplete="off"
+        spellcheck="false"
+      />
+    </div>
+  `;
+  if (!suggestions.length) {
+    wrap.dataset.expanded = "true";
+    wrap.dataset.activeIndex = "-1";
+    panel.innerHTML = `${searchMarkup}<div class="order-item-suggestion-empty">Khong tim thay hang hoa phu hop</div>`;
+    panel.classList.remove("hidden");
+    return;
+  }
+
+  panel.innerHTML =
+    searchMarkup +
+    suggestions
+      .slice(0, 10)
+      .map(
+        (item) => `
+          <button type="button" class="order-item-suggestion" data-order-item-option="${escapeHtml(item.name)}">
+            ${buildHighlightedOrderItemLabel(item, query)}
+          </button>
+        `,
+      )
+      .join("");
+  wrap.dataset.expanded = "true";
+  panel.classList.remove("hidden");
+  setActiveProductionCreateOrderItemSuggestion(wrap, 0);
+}
+
+function syncProductionCreateRowProductDetails(row) {
+  if (!row) {
+    return;
+  }
+
+  const nameInput = row.querySelector('[data-field="name"]');
+  const codeInput = row.querySelector('[data-field="code"]');
+  const unitSelect = row.querySelector('[data-field="unit"]');
+  let matchedProduct = findOrderProductByName(nameInput?.value || "");
+
+  if (!matchedProduct) {
+    matchedProduct = findOrderProductByCode(codeInput?.value || "");
+    if (matchedProduct && nameInput && !String(nameInput.value || "").trim()) {
+      nameInput.value = String(matchedProduct.name || "").trim();
+    }
+  }
+
+  if (!matchedProduct) {
+    if (unitSelect) {
+      unitSelect.innerHTML = buildProductionUnitOptions(nameInput?.value || "", unitSelect.value || "");
+    }
+    return;
+  }
+
+  if (codeInput) {
+    codeInput.value = String(matchedProduct.code || "").trim();
+  }
+  if (unitSelect) {
+    unitSelect.innerHTML = buildProductionUnitOptions(matchedProduct.name || "", unitSelect.value || matchedProduct.default_unit || "");
+    if (!unitSelect.value && matchedProduct.default_unit) {
+      unitSelect.value = matchedProduct.default_unit;
+    }
+  }
+}
+
+function selectProductionCreateOrderItemSuggestion(input, productName) {
+  if (!input) {
+    return;
+  }
+  const wrap = input.closest(".order-item-name-wrap");
+  const row = input.closest("[data-production-create-row]");
+  input.value = productName;
+  if (wrap) {
+    wrap.dataset.locked = "true";
+  }
+  syncProductionCreateRowProductDetails(row);
+  closeProductionCreateOrderItemSuggestions();
+  syncProductionCreateDraft();
+  input.focus();
+  input.setSelectionRange(input.value.length, input.value.length);
 }
 
 function resetProductionCreateForm() {
@@ -688,7 +989,11 @@ function syncProductionCreateRequesterSignature() {
     return;
   }
   const selectedText = String(productionCreateRequester?.selectedOptions?.[0]?.textContent || "").trim();
+  const primaryLabel = selectedText.split(" - ")[0].trim();
   productionCreateRequesterSignature.textContent = selectedText ? selectedText.split("•")[0].trim() : "-";
+  if (primaryLabel) {
+    productionCreateRequesterSignature.textContent = primaryLabel;
+  }
 }
 
 function addProductionCreateItemRow(values = {}) {
@@ -696,25 +1001,44 @@ function addProductionCreateItemRow(values = {}) {
     return;
   }
 
+  const quantityValue = String(values.quantity || "").trim();
+  const doneValue = String(values.done || "").trim();
+  const missingValue = String(values.missing || "").trim();
+  const extraValue = String(values.extra || "").trim();
+  const quantityNumber = Math.max(0, Number(quantityValue || 0));
+  const doneNumber = Math.max(0, Number(doneValue || 0));
+  const missingNumber = Math.max(0, Number(missingValue || 0));
+  const extraNumber = Math.max(0, Number(extraValue || 0));
+  const shouldDefaultMissingToQuantity =
+    quantityNumber > 0 && doneNumber === 0 && missingNumber === 0 && extraNumber === 0;
+  const hasProgressValues = (doneValue || missingValue || extraValue) && !shouldDefaultMissingToQuantity;
+  const normalizedDoneValue = doneValue || "0";
+  const normalizedMissingValue = hasProgressValues ? missingValue || "0" : quantityValue || "0";
+  const normalizedExtraValue = extraValue || "0";
+
   const row = document.createElement("div");
   row.className = "production-create-row";
   row.setAttribute("data-production-create-row", "true");
   row.innerHTML = `
     <div class="production-create-index"><span data-field="index-label">1</span></div>
     <input class="production-create-code" data-field="code" type="text" value="${escapeHtml(values.code || "")}" />
-    <div class="production-create-name-wrap">
-      <textarea class="production-create-name" data-field="name" rows="1" placeholder="Ten hang hoa">${escapeHtml(values.name || "")}</textarea>
+    <div class="order-item-name-wrap production-create-name-wrap">
+      <textarea class="production-create-name order-item-name" data-field="name" rows="1" placeholder="Tim hoac nhap hang hoa" autocomplete="off" spellcheck="false">${escapeHtml(values.name || "")}</textarea>
+      <button type="button" class="order-item-name-toggle" data-order-item-toggle aria-label="Mo danh sach hang hoa">
+        <span></span>
+      </button>
+      <div class="order-item-suggestions hidden"></div>
     </div>
     <input class="production-create-norm" data-field="norm" type="text" value="${escapeHtml(values.norm || "")}" />
-    <select class="production-create-unit" data-field="unit">${buildProductionUnitOptions(values.unit || "")}</select>
-    <input class="production-create-quantity" data-field="quantity" type="number" min="0" step="1" value="${escapeHtml(values.quantity || "")}" />
-    <input class="production-create-done" data-field="done" type="number" min="0" step="1" value="${escapeHtml(values.done || "0")}" />
-    <input class="production-create-missing" data-field="missing" type="number" min="0" step="1" value="${escapeHtml(values.missing || "0")}" />
-    <input class="production-create-extra" data-field="extra" type="number" min="0" step="1" value="${escapeHtml(values.extra || "0")}" />
+    <select class="production-create-unit" data-field="unit">${buildProductionUnitOptions(values.name || "", values.unit || "")}</select>
+    <input class="production-create-quantity" data-field="quantity" type="number" min="0" step="1" value="${escapeHtml(quantityValue)}" />
+    <input class="production-create-done" data-field="done" type="number" min="0" step="1" value="${escapeHtml(normalizedDoneValue)}" />
+    <input class="production-create-missing" data-field="missing" type="number" min="0" step="1" value="${escapeHtml(normalizedMissingValue)}" />
+    <input class="production-create-extra" data-field="extra" type="number" min="0" step="1" value="${escapeHtml(normalizedExtraValue)}" />
     <input class="production-create-team" data-field="team" type="number" min="0" step="1" value="${escapeHtml(values.team || "")}" />
   `;
 
-  row.querySelectorAll('input[data-field="quantity"], input[data-field="done"]').forEach((input) => {
+  row.querySelectorAll('input[data-field="quantity"], input[data-field="done"], input[data-field="code"]').forEach((input) => {
     input.addEventListener("input", () => updateProductionCreateDerivedFields(row));
     input.addEventListener("change", () => updateProductionCreateDerivedFields(row));
   });
@@ -724,6 +1048,7 @@ function addProductionCreateItemRow(values = {}) {
 
   productionCreateItemsList.append(row);
   autoResizeProductionCreateName(row.querySelector('[data-field="name"]'));
+  syncProductionCreateRowProductDetails(row);
   updateProductionCreateDerivedFields(row);
   syncProductionCreateDraft();
   row.querySelector('[data-field="code"]')?.focus();
@@ -759,6 +1084,13 @@ function syncProductionCreateDraft() {
   const rows = Array.from(productionCreateItemsList?.querySelectorAll("[data-production-create-row]") || []);
   rows.forEach((row, index) => {
     const indexNode = row.querySelector('[data-field="index-label"]');
+    const unitSelect = row.querySelector('[data-field="unit"]');
+    const name = row.querySelector('[data-field="name"]')?.value?.trim() || "";
+    syncProductionCreateRowProductDetails(row);
+    const availableUnits = buildProductionUnitOptions(name, unitSelect?.value || "");
+    if (unitSelect && unitSelect.innerHTML !== availableUnits) {
+      unitSelect.innerHTML = availableUnits;
+    }
     if (indexNode) {
       indexNode.textContent = String(index + 1);
     }
@@ -767,6 +1099,169 @@ function syncProductionCreateDraft() {
   if (productionCreateItemsEmpty) {
     productionCreateItemsEmpty.classList.toggle("hidden", rows.length > 0);
   }
+}
+
+function handleProductionCreateOrderItemInput(event) {
+  const searchInput = event.target?.closest?.("[data-order-item-search]");
+  if (searchInput) {
+    const wrap = searchInput.closest(".order-item-name-wrap");
+    const input = wrap?.querySelector('[data-field="name"]');
+    if (!wrap || !input) {
+      return;
+    }
+    wrap.dataset.locked = "false";
+    renderProductionCreateOrderItemSuggestions(input, searchInput.value || "");
+    const nextSearchInput = wrap.querySelector("[data-order-item-search]");
+    nextSearchInput?.focus();
+    nextSearchInput?.setSelectionRange(nextSearchInput.value.length, nextSearchInput.value.length);
+    return;
+  }
+
+  const nameInput = event.target?.closest?.(".production-create-name");
+  if (nameInput) {
+    const wrap = nameInput.closest(".order-item-name-wrap");
+    if (wrap?.dataset.locked === "true") {
+      return;
+    }
+    renderProductionCreateOrderItemSuggestions(nameInput);
+    syncProductionCreateRowProductDetails(nameInput.closest("[data-production-create-row]"));
+    syncProductionCreateDraft();
+    return;
+  }
+
+  const codeInput = event.target?.closest?.(".production-create-code");
+  if (codeInput) {
+    syncProductionCreateRowProductDetails(codeInput.closest("[data-production-create-row]"));
+    syncProductionCreateDraft();
+  }
+}
+
+function handleProductionCreateOrderItemFocus(event) {
+  const input = event.target?.closest?.(".production-create-name");
+  if (!input) {
+    return;
+  }
+  closeProductionCreateOrderItemSuggestions(input);
+}
+
+function handleProductionCreateOrderItemKeydown(event) {
+  const searchInput = event.target?.closest?.("[data-order-item-search]");
+  if (searchInput) {
+    const wrap = searchInput.closest(".order-item-name-wrap");
+    const input = wrap?.querySelector('[data-field="name"]');
+    const buttons = Array.from(wrap?.querySelectorAll("[data-order-item-option]") || []);
+    const activeIndex = Number(wrap?.dataset.activeIndex || -1);
+    if (!wrap || !input) {
+      return;
+    }
+
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      setActiveProductionCreateOrderItemSuggestion(wrap, buttons.length ? activeIndex + 1 : 0);
+      return;
+    }
+    if (event.key === "ArrowUp") {
+      event.preventDefault();
+      setActiveProductionCreateOrderItemSuggestion(wrap, activeIndex <= 0 ? 0 : activeIndex - 1);
+      return;
+    }
+    if (event.key === "Enter" && buttons.length && activeIndex >= 0) {
+      event.preventDefault();
+      selectProductionCreateOrderItemSuggestion(input, buttons[activeIndex].dataset.orderItemOption || "");
+      return;
+    }
+    if (event.key === "Escape") {
+      event.preventDefault();
+      closeProductionCreateOrderItemSuggestions();
+      input.focus();
+    }
+    return;
+  }
+
+  const input = event.target?.closest?.(".production-create-name");
+  if (!input) {
+    return;
+  }
+
+  const wrap = input.closest(".order-item-name-wrap");
+  const buttons = Array.from(wrap?.querySelectorAll("[data-order-item-option]") || []);
+  const activeIndex = Number(wrap?.dataset.activeIndex || -1);
+  if (event.key === "ArrowDown") {
+    event.preventDefault();
+    if (!buttons.length) {
+      renderProductionCreateOrderItemSuggestions(input);
+      return;
+    }
+    setActiveProductionCreateOrderItemSuggestion(wrap, activeIndex + 1);
+    return;
+  }
+  if (event.key === "ArrowUp") {
+    event.preventDefault();
+    if (!buttons.length) {
+      renderProductionCreateOrderItemSuggestions(input);
+      return;
+    }
+    setActiveProductionCreateOrderItemSuggestion(wrap, activeIndex <= 0 ? 0 : activeIndex - 1);
+    return;
+  }
+  if (event.key === "Enter" && buttons.length && activeIndex >= 0) {
+    event.preventDefault();
+    selectProductionCreateOrderItemSuggestion(input, buttons[activeIndex].dataset.orderItemOption || "");
+    return;
+  }
+  if (event.key === "Escape") {
+    closeProductionCreateOrderItemSuggestions();
+  }
+}
+
+function handleProductionCreateOrderItemClick(event) {
+  const suggestionButton = event.target?.closest?.("[data-order-item-option]");
+  if (suggestionButton) {
+    const input = suggestionButton.closest(".order-item-name-wrap")?.querySelector('[data-field="name"]');
+    selectProductionCreateOrderItemSuggestion(input, suggestionButton.dataset.orderItemOption || "");
+    return;
+  }
+
+  const toggleButton = event.target?.closest?.("[data-order-item-toggle]");
+  if (toggleButton) {
+    const wrap = toggleButton.closest(".order-item-name-wrap");
+    const input = wrap?.querySelector('[data-field="name"]');
+    const isExpanded = wrap?.dataset.expanded === "true";
+    if (!wrap || !input) {
+      return;
+    }
+    if (isExpanded) {
+      closeProductionCreateOrderItemSuggestions();
+      wrap.dataset.locked = "true";
+      return;
+    }
+    wrap.dataset.locked = "false";
+    closeProductionCreateOrderItemSuggestions(input);
+    renderProductionCreateOrderItemSuggestions(input, "");
+    input.focus();
+    return;
+  }
+
+  const nameInput = event.target?.closest?.(".production-create-name");
+  if (nameInput) {
+    const wrap = nameInput.closest(".order-item-name-wrap");
+    if (!wrap) {
+      return;
+    }
+    if (wrap.dataset.expanded === "true") {
+      return;
+    }
+    wrap.dataset.locked = "false";
+    closeProductionCreateOrderItemSuggestions(nameInput);
+    renderProductionCreateOrderItemSuggestions(nameInput, "");
+  }
+}
+
+function handleProductionCreateOrderItemOutsideClick(event) {
+  if (event.target?.closest?.(".order-item-name-wrap")) {
+    return;
+  }
+  closeProductionCreateOrderItemSuggestions();
 }
 
 function buildProductionCreateItemsSummary() {

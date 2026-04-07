@@ -23,8 +23,16 @@ import {
   updateUserProfile,
   updateUserPassword,
   updateUserAccess,
+  loginWithUserId,
 } from "./lib/accessControl.mjs";
 import { sendMail } from "./lib/mailer.mjs";
+import {
+  findTelegramLinkByInternalUserId,
+  findTelegramLinkByTelegramUserId,
+  sendTelegramTextMessage,
+  upsertTelegramLink,
+  validateTelegramInitData,
+} from "./lib/telegram.mjs";
 import {
   buildInternalFallbackAnswer,
   buildNoSearchAnswer,
@@ -165,6 +173,7 @@ const TAPE_CALCULATOR_FETCH_RETRY_COUNT = 3;
 const userSyncOptions = {
   usersSheetUrl: config.usersSheetUrl,
   usersSyncIntervalMs: config.usersSyncIntervalMs,
+  sessionTtlMs: config.auth.sessionTtlMs,
 };
 
 const MIME_TYPES = {
@@ -257,11 +266,72 @@ async function handleRequest(request, response) {
       }
       return openNotificationStream(response, auth.currentUser);
     }
+
+    if (request.method === "POST" && requestUrl.pathname === "/api/telegram/login") {
+      if (!config.telegram.botToken) {
+        return sendJson(response, 400, { error: "Bot Telegram chua duoc cau hinh." });
+      }
+
+      const payload = await readJsonBody(request);
+      const telegramAuth = validateTelegramInitData(payload.init_data, config.telegram.botToken, {
+        maxAgeSeconds: config.telegram.initDataMaxAgeSeconds,
+      });
+      const telegramUserId = String(telegramAuth?.user?.id || "").trim();
+      if (!telegramUserId) {
+        return sendJson(response, 400, { error: "Khong tim thay nguoi dung Telegram." });
+      }
+
+      const linkedAccount = await findTelegramLinkByTelegramUserId(config.telegram.linksFile, telegramUserId);
+      if (!linkedAccount) {
+        return sendJson(response, 404, { error: "Tai khoan Telegram nay chua duoc lien ket voi he thong noi bo." });
+      }
+
+      const session = await loginWithUserId(config.usersFile, linkedAccount.internal_user_id, {
+        ...userSyncOptions,
+        sessionTtlMs: config.auth.sessionTtlMs,
+      });
+
+      return sendJson(response, 200, {
+        ok: true,
+        token: session.token,
+        currentUser: sanitizeUser(session.user),
+        linked: true,
+      });
+    }
+
     const { currentUser, users } = await resolveCurrentUser(
       config.usersFile,
       request,
       userSyncOptions,
     );
+
+    if (request.method === "POST" && requestUrl.pathname === "/api/telegram/link") {
+      if (!currentUser) {
+        return sendJson(response, 401, { error: "Ban can dang nhap de lien ket Telegram." });
+      }
+      if (!config.telegram.botToken) {
+        return sendJson(response, 400, { error: "Bot Telegram chua duoc cau hinh." });
+      }
+
+      const payload = await readJsonBody(request);
+      const telegramAuth = validateTelegramInitData(payload.init_data, config.telegram.botToken, {
+        maxAgeSeconds: config.telegram.initDataMaxAgeSeconds,
+      });
+      const telegramUser = telegramAuth?.user || null;
+      if (!telegramUser?.id) {
+        return sendJson(response, 400, { error: "Khong tim thay thong tin nguoi dung Telegram." });
+      }
+
+      const link = await upsertTelegramLink(config.telegram.linksFile, {
+        internalUserId: currentUser.id,
+        telegramUser,
+      });
+
+      return sendJson(response, 200, {
+        ok: true,
+        link,
+      });
+    }
 
     if (request.method === "POST" && requestUrl.pathname === "/api/login") {
       const payload = await readJsonBody(request);
@@ -273,6 +343,7 @@ async function handleRequest(request, response) {
           ...userSyncOptions,
           requireAdminOtp: true,
           adminOtpTtlMs: config.auth.adminOtpTtlMs,
+          sessionTtlMs: config.auth.sessionTtlMs,
           sendAdminOtp: ({ email, code, user, ttlMs }) =>
             sendMail(config.mail, {
               to: email,
@@ -304,7 +375,10 @@ async function handleRequest(request, response) {
         config.usersFile,
         payload.challengeToken,
         payload.code,
-        userSyncOptions,
+        {
+          ...userSyncOptions,
+          sessionTtlMs: config.auth.sessionTtlMs,
+        },
       );
       return sendJson(response, 200, {
         ok: true,
@@ -2212,9 +2286,11 @@ async function handleRequest(request, response) {
         ? 401
         : message === "Tai khoan hoac mat khau khong dung."
           ? 401
-        : message === "Ban khong co quyen phan quyen nguoi dung."
-          ? 403
-          : 500;
+          : message.includes("Telegram")
+            ? 400
+            : message === "Ban khong co quyen phan quyen nguoi dung."
+              ? 403
+              : 500;
     return sendJson(response, statusCode, {
       error: message,
     });
@@ -3485,10 +3561,47 @@ async function readDeliveryCompletions(filePath) {
 async function appendNotification(filePath, record) {
   await orderStore.appendNotification(record);
   broadcastNotification(record);
+  await maybeSendTelegramNotification(record);
 }
 
 async function readNotifications(filePath, currentUser = null, options = {}) {
   return orderStore.readNotifications(currentUser, options);
+}
+
+async function maybeSendTelegramNotification(record) {
+  if (!config.telegram.botToken) {
+    return;
+  }
+
+  const targetUserId = String(record?.user_id || "").trim();
+  if (!targetUserId) {
+    return;
+  }
+
+  const link = await findTelegramLinkByInternalUserId(config.telegram.linksFile, targetUserId);
+  if (!link?.telegram_user_id) {
+    return;
+  }
+
+  const text = buildTelegramNotificationText(record);
+  if (!text) {
+    return;
+  }
+
+  try {
+    await sendTelegramTextMessage(config.telegram.botToken, link.telegram_user_id, text);
+  } catch (error) {
+    console.error("Khong gui duoc thong bao Telegram:", error instanceof Error ? error.message : error);
+  }
+}
+
+function buildTelegramNotificationText(record) {
+  const title = String(record?.title || "").trim();
+  const message = String(record?.message || "").trim();
+  const orderId = String(record?.meta?.order_id || "").trim();
+  const createdAt = String(record?.created_at || "").trim();
+  const footer = createdAt ? `Luc: ${formatDeliveryTimestamp(createdAt)}` : "";
+  return [title, message, orderId ? `Ma don: ${orderId}` : "", footer].filter(Boolean).join("\n");
 }
 
 function openNotificationStream(response, currentUser) {
