@@ -19,44 +19,72 @@
           <p class="hero-note">
             Giu web hien tai nhu cu. Mini app nay chi gom giao hang, bang tinh, tao don va theo doi don.
           </p>
+          <div class="hero-flags">
+            <span class="hero-flag">Web giu nguyen</span>
+            <span class="hero-flag">Telegram mini app</span>
+            <span class="hero-flag">Desktop layout</span>
+          </div>
         </div>
-        <div class="hero-user" id="hero-user">
-          <strong id="hero-user-name">Chua dang nhap</strong>
-          <span id="hero-user-meta">Dang dung tren Telegram hoac browser</span>
+        <div class="hero-side">
+          <div class="hero-user" id="hero-user">
+            <strong id="hero-user-name">Chua dang nhap</strong>
+            <span id="hero-user-meta">Dang dung tren Telegram hoac browser</span>
+          </div>
+          <div class="hero-metrics" aria-hidden="true">
+            <article class="hero-metric">
+              <span>Tap trung</span>
+              <strong>4 luong chinh</strong>
+            </article>
+            <article class="hero-metric">
+              <span>Muc tieu</span>
+              <strong>Gon nhu desktop</strong>
+            </article>
+          </div>
         </div>
       </header>
 
       <main class="app-stack">
-        <section class="panel" id="login-panel">
+        <section class="panel panel-login" id="login-panel">
           <div class="panel-head">
             <div>
               <p class="panel-kicker">Dang nhap</p>
               <h2>Tai khoan noi bo</h2>
             </div>
           </div>
-          <form class="form-grid" id="login-form">
-            <label class="field">
-              <span>Tai khoan</span>
-              <input id="login-username" type="text" autocomplete="username" placeholder="vd: nguyenvana" />
-            </label>
-            <label class="field">
-              <span>Mat khau</span>
-              <input id="login-password" type="password" autocomplete="current-password" placeholder="Nhap mat khau" />
-            </label>
-            <div class="otp-block hidden" id="otp-block">
+          <div class="login-layout">
+            <div class="login-intro">
+              <p class="panel-kicker">Che do desktop</p>
+              <h3>Dang nhap mot lan de mo bo dieu huong nhanh tren Telegram.</h3>
+              <ul class="login-intro-list">
+                <li>Web goc van dung binh thuong nhu hien tai.</li>
+                <li>Mini app nay chi giu 4 luong thao tac can nhat.</li>
+                <li>Du lieu, phan quyen va API van dung chung voi he thong cu.</li>
+              </ul>
+            </div>
+            <form class="form-grid login-form-grid" id="login-form">
               <label class="field">
-                <span>Ma OTP</span>
-                <input id="login-otp" type="text" inputmode="numeric" maxlength="6" placeholder="Nhap 6 so" />
+                <span>Tai khoan</span>
+                <input id="login-username" type="text" autocomplete="username" placeholder="vd: nguyenvana" />
               </label>
-              <p class="inline-note" id="otp-note"></p>
-            </div>
-            <div class="form-actions">
-              <button class="primary-button" id="login-submit" type="submit">Dang nhap</button>
-            </div>
-          </form>
+              <label class="field">
+                <span>Mat khau</span>
+                <input id="login-password" type="password" autocomplete="current-password" placeholder="Nhap mat khau" />
+              </label>
+              <div class="otp-block hidden" id="otp-block">
+                <label class="field">
+                  <span>Ma OTP</span>
+                  <input id="login-otp" type="text" inputmode="numeric" maxlength="6" placeholder="Nhap 6 so" />
+                </label>
+                <p class="inline-note" id="otp-note"></p>
+              </div>
+              <div class="form-actions">
+                <button class="primary-button" id="login-submit" type="submit">Dang nhap</button>
+              </div>
+            </form>
+          </div>
         </section>
 
-        <section class="panel hidden" id="workspace-panel">
+        <section class="panel panel-sidebar hidden" id="workspace-panel">
           <div class="panel-head workspace-head">
             <div>
               <p class="panel-kicker">Dieu huong</p>
@@ -64,33 +92,61 @@
             </div>
             <button class="ghost-button" id="logout-button" type="button">Dang xuat</button>
           </div>
+          <div class="workspace-summary">
+            <article class="workspace-summary-card">
+              <span>Che do</span>
+              <strong>Bang dieu huong nhanh</strong>
+              <p>Chon 1 luong lam viec o cot trai, thao tac chinh mo o khung ben phai.</p>
+            </article>
+            <article class="workspace-summary-card">
+              <span>Toi uu</span>
+              <strong>Giong tren desktop hon</strong>
+              <p>Man hinh rong se hien bo cuc ro tung khu vuc thay vi xep dong nhu mobile.</p>
+            </article>
+          </div>
 
           <div class="action-grid" id="action-grid">
             <button class="action-card accent-delivery" data-section="delivery" type="button">
-              <span class="action-title">Hoan thanh giao hang</span>
-              <span class="action-subtitle">Cap nhat ket qua giao va thanh toan</span>
+              <span class="action-index">01</span>
+              <span class="action-copy">
+                <span class="action-title">Hoan thanh giao hang</span>
+                <span class="action-subtitle">Cap nhat ket qua giao, thanh toan va ghi chu tai cho</span>
+              </span>
             </button>
             <button class="action-card accent-tape" data-section="tape" type="button">
-              <span class="action-title">Bang tinh bang dinh</span>
-              <span class="action-subtitle">Tinh nhanh so tay, so cuon va du hao</span>
+              <span class="action-index">02</span>
+              <span class="action-copy">
+                <span class="action-title">Bang tinh bang dinh</span>
+                <span class="action-subtitle">Tinh nhanh so tay, so cuon va du hao ngay tren 1 bang</span>
+              </span>
             </button>
             <button class="action-card accent-order" data-section="create" type="button">
-              <span class="action-title">Tao don</span>
-              <span class="action-subtitle">Tao don van chuyen hoac phieu san xuat</span>
+              <span class="action-index">03</span>
+              <span class="action-copy">
+                <span class="action-title">Tao don</span>
+                <span class="action-subtitle">Tao don van chuyen hoac phieu san xuat bang form rut gon</span>
+              </span>
             </button>
             <button class="action-card accent-track" data-section="tracking" type="button">
-              <span class="action-title">Theo doi don</span>
-              <span class="action-subtitle">Loc nhanh va xem tinh trang don</span>
+              <span class="action-index">04</span>
+              <span class="action-copy">
+                <span class="action-title">Theo doi don</span>
+                <span class="action-subtitle">Loc nhanh va xem tinh trang don trong mot bang tong hop</span>
+              </span>
             </button>
           </div>
         </section>
 
-        <section class="panel hidden" id="delivery-panel">
+        <section class="panel feature-panel hidden" id="delivery-panel">
           <div class="panel-head">
             <div>
               <p class="panel-kicker">1 / 4</p>
               <h2>Hoan thanh giao hang</h2>
             </div>
+          </div>
+          <div class="panel-subhead">
+            <p class="panel-description">Cap nhat ket qua giao, thanh toan va thong tin chot don trong cung mot khung thao tac.</p>
+            <span class="panel-chip">Van chuyen</span>
           </div>
           <form class="form-grid" id="delivery-form">
             <label class="field">
@@ -147,13 +203,17 @@
           </form>
         </section>
 
-        <section class="panel hidden" id="tape-panel">
+        <section class="panel feature-panel hidden" id="tape-panel">
           <div class="panel-head">
             <div>
               <p class="panel-kicker">2 / 4</p>
               <h2>Bang tinh bang dinh</h2>
             </div>
             <span class="mini-badge" id="tape-source-badge">Dang tai du lieu</span>
+          </div>
+          <div class="panel-subhead">
+            <p class="panel-description">Nhap thong so co ban va xem ngay san luong, so tay can cat, luong du va luong xuat.</p>
+            <span class="panel-chip">San xuat</span>
           </div>
           <form class="form-grid" id="tape-form">
             <label class="field">
@@ -209,12 +269,16 @@
           </div>
         </section>
 
-        <section class="panel hidden" id="create-panel">
+        <section class="panel feature-panel hidden" id="create-panel">
           <div class="panel-head">
             <div>
               <p class="panel-kicker">3 / 4</p>
               <h2>Tao don</h2>
             </div>
+          </div>
+          <div class="panel-subhead">
+            <p class="panel-description">Tao nhanh don van chuyen hoac phieu san xuat bang mot form rut gon, de doc hon tren man hinh rong.</p>
+            <span class="panel-chip">Tao moi</span>
           </div>
           <div class="segment" id="create-kind-switch">
             <button class="segment-button is-active" data-order-kind="transport" type="button">Don van chuyen</button>
@@ -267,13 +331,17 @@
           </form>
         </section>
 
-        <section class="panel hidden" id="tracking-panel">
+        <section class="panel feature-panel hidden" id="tracking-panel">
           <div class="panel-head">
             <div>
               <p class="panel-kicker">4 / 4</p>
               <h2>Theo doi don</h2>
             </div>
             <button class="ghost-button" id="refresh-orders-button" type="button">Tai lai</button>
+          </div>
+          <div class="panel-subhead">
+            <p class="panel-description">Loc nhanh theo loai don, tim kiem theo tu khoa va thao tac tiep ngay tu danh sach tong hop.</p>
+            <span class="panel-chip">Tong hop</span>
           </div>
 
           <div class="segment" id="tracking-kind-switch">
