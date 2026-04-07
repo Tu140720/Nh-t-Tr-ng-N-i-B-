@@ -242,8 +242,8 @@ const STORAGE_FOLDER_OPTIONS = {
   },
 };
 
-server.listen(config.port, () => {
-  console.log(`Server dang lang nghe tai http://127.0.0.1:${config.port}`);
+server.listen(config.port, config.host, () => {
+  console.log(`Server dang lang nghe tai http://${config.host}:${config.port}`);
 });
 
 async function handleRequest(request, response) {
