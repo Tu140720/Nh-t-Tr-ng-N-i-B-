@@ -13,6 +13,7 @@ COPY . .
 
 RUN mkdir -p /app/data /app/bootstrap-data && \
     cp -a /app/data/. /app/bootstrap-data/ 2>/dev/null || true && \
+    sed -i 's/\r$//' /app/scripts/render-entrypoint.sh && \
     chmod +x /app/scripts/render-entrypoint.sh
 
 ENV NODE_ENV=production
