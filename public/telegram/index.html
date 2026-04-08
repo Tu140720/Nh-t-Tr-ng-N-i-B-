@@ -6,7 +6,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
     />
-    <title>Telegram Mini App</title>
+    <title>Mini App Telegram</title>
     <link rel="stylesheet" href="/telegram/styles.css" />
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
   </head>
@@ -14,30 +14,30 @@
     <div class="telegram-shell">
       <header class="hero-card">
         <div class="hero-copy">
-          <p class="eyebrow">Telegram Mini App</p>
-          <h1>4 chuc nang chinh</h1>
+          <p class="eyebrow">Mini App Telegram</p>
+          <h1>4 chức năng chính</h1>
           <p class="hero-note">
-            Giu web hien tai nhu cu. Mini app nay chi gom giao hang, bang tinh, tao don va theo doi don.
+            Giữ web hiện tại như cũ. Mini app này chỉ gồm giao hàng, bảng tính, tạo đơn và theo dõi đơn.
           </p>
           <div class="hero-flags">
-            <span class="hero-flag">Web giu nguyen</span>
+            <span class="hero-flag">Web giữ nguyên</span>
             <span class="hero-flag">Telegram mini app</span>
             <span class="hero-flag">Desktop layout</span>
           </div>
         </div>
         <div class="hero-side">
           <div class="hero-user" id="hero-user">
-            <strong id="hero-user-name">Chua dang nhap</strong>
-            <span id="hero-user-meta">Dang dung tren Telegram hoac browser</span>
+            <strong id="hero-user-name">Chưa đăng nhập</strong>
+            <span id="hero-user-meta">Đang dùng trên Telegram hoặc trình duyệt</span>
           </div>
           <div class="hero-metrics" aria-hidden="true">
             <article class="hero-metric">
-              <span>Tap trung</span>
-              <strong>4 luong chinh</strong>
+              <span>Tập trung</span>
+              <strong>4 luồng chính</strong>
             </article>
             <article class="hero-metric">
-              <span>Muc tieu</span>
-              <strong>Gon nhu desktop</strong>
+              <span>Mục tiêu</span>
+              <strong>Gọn như desktop</strong>
             </article>
           </div>
         </div>
@@ -47,38 +47,38 @@
         <section class="panel panel-login" id="login-panel">
           <div class="panel-head">
             <div>
-              <p class="panel-kicker">Dang nhap</p>
-              <h2>Tai khoan noi bo</h2>
+              <p class="panel-kicker">Đăng nhập</p>
+              <h2>Tài khoản nội bộ</h2>
             </div>
           </div>
           <div class="login-layout">
             <div class="login-intro">
-              <p class="panel-kicker">Che do desktop</p>
-              <h3>Dang nhap mot lan de mo bo dieu huong nhanh tren Telegram.</h3>
+              <p class="panel-kicker">Chế độ desktop</p>
+              <h3>Đăng nhập một lần để mở bộ điều hướng nhanh trên Telegram.</h3>
               <ul class="login-intro-list">
-                <li>Web goc van dung binh thuong nhu hien tai.</li>
-                <li>Mini app nay chi giu 4 luong thao tac can nhat.</li>
-                <li>Du lieu, phan quyen va API van dung chung voi he thong cu.</li>
+                <li>Web gốc vẫn dùng bình thường như hiện tại.</li>
+                <li>Mini app này chỉ giữ 4 luồng thao tác cần nhất.</li>
+                <li>Dữ liệu, phân quyền và API vẫn dùng chung với hệ thống cũ.</li>
               </ul>
             </div>
             <form class="form-grid login-form-grid" id="login-form">
               <label class="field">
-                <span>Tai khoan</span>
+                <span>Tài khoản</span>
                 <input id="login-username" type="text" autocomplete="username" placeholder="vd: nguyenvana" />
               </label>
               <label class="field">
-                <span>Mat khau</span>
-                <input id="login-password" type="password" autocomplete="current-password" placeholder="Nhap mat khau" />
+                <span>Mật khẩu</span>
+                <input id="login-password" type="password" autocomplete="current-password" placeholder="Nhập mật khẩu" />
               </label>
               <div class="otp-block hidden" id="otp-block">
                 <label class="field">
-                  <span>Ma OTP</span>
-                  <input id="login-otp" type="text" inputmode="numeric" maxlength="6" placeholder="Nhap 6 so" />
+                  <span>Mã OTP</span>
+                  <input id="login-otp" type="text" inputmode="numeric" maxlength="6" placeholder="Nhập 6 số" />
                 </label>
                 <p class="inline-note" id="otp-note"></p>
               </div>
               <div class="form-actions">
-                <button class="primary-button" id="login-submit" type="submit">Dang nhap</button>
+                <button class="primary-button" id="login-submit" type="submit">Đăng nhập</button>
               </div>
             </form>
           </div>
@@ -87,41 +87,41 @@
         <section class="panel panel-sidebar hidden" id="workspace-panel">
           <div class="action-grid" id="action-grid">
             <button class="action-card accent-delivery" data-section="delivery" type="button">
-              <span class="action-title">Hoan thanh giao hang</span>
+              <span class="action-title">Hoàn thành giao hàng</span>
             </button>
             <button class="action-card accent-tape" data-section="tape" type="button">
-              <span class="action-title">Bang tinh bang dinh</span>
+              <span class="action-title">Bảng tính băng dính</span>
             </button>
             <button class="action-card accent-order" data-section="create" type="button">
-              <span class="action-title">Tao don</span>
+              <span class="action-title">Tạo đơn</span>
             </button>
             <div class="create-action-panel hidden" id="create-action-panel">
               <button class="create-action-option create-action-option-production" id="open-production-create-button" type="button">
-                Tao don san xuat
+                Tạo đơn sản xuất
               </button>
               <button class="create-action-option create-action-option-transport" id="open-transport-create-button" type="button">
-                Tao don van chuyen
+                Tạo đơn vận chuyển
               </button>
             </div>
             <button class="action-card accent-track" data-section="tracking" type="button">
-              <span class="action-title">Theo doi don</span>
+              <span class="action-title">Theo dõi đơn</span>
             </button>
           </div>
 
           <section class="notification-home-card">
             <div class="notification-section-head">
-              <p class="notification-section-title">Thong bao</p>
-              <button class="mini-link-button" id="logout-button" type="button">Dang xuat</button>
+              <p class="notification-section-title">Thông báo</p>
+              <button class="mini-link-button" id="logout-button" type="button">Đăng xuất</button>
             </div>
 
             <div class="notification-toolbar">
               <label class="notification-filter-wrap">
-                <select id="notification-filter" aria-label="Loc thong bao">
-                  <option value="all">Tat ca</option>
-                  <option value="unread">Chua doc</option>
+                <select id="notification-filter" aria-label="Lọc thông báo">
+                  <option value="all">Tất cả</option>
+                  <option value="unread">Chưa đọc</option>
                 </select>
               </label>
-              <button class="mini-pill-button" id="mark-all-notifications-read" type="button">Da doc het</button>
+              <button class="mini-pill-button" id="mark-all-notifications-read" type="button">Đã đọc hết</button>
               <span class="mini-count-pill" id="notification-count">0</span>
             </div>
 
@@ -130,9 +130,9 @@
             <div class="notification-divider"></div>
 
             <div class="notification-section-head">
-              <p class="notification-section-title">Lich su thong bao</p>
+              <p class="notification-section-title">Lịch sử thông báo</p>
               <div class="notification-history-actions">
-                <button class="mini-pill-button" id="clear-notification-history" type="button">Xoa lich su</button>
+                <button class="mini-pill-button" id="clear-notification-history" type="button">Xóa lịch sử</button>
                 <span class="mini-count-pill" id="notification-history-count">0</span>
               </div>
             </div>
@@ -145,64 +145,64 @@
           <div class="panel-head">
             <div>
               <p class="panel-kicker">1 / 4</p>
-              <h2>Hoan thanh giao hang</h2>
+              <h2>Hoàn thành giao hàng</h2>
             </div>
           </div>
           <div class="panel-subhead">
-            <p class="panel-description">Cap nhat ket qua giao, thanh toan va thong tin chot don trong cung mot khung thao tac.</p>
-            <span class="panel-chip">Van chuyen</span>
+            <p class="panel-description">Cập nhật kết quả giao, thanh toán và thông tin chốt đơn trong cùng một khung thao tác.</p>
+            <span class="panel-chip">Vận chuyển</span>
           </div>
           <form class="form-grid" id="delivery-form">
             <label class="field">
-              <span>Don van chuyen</span>
+              <span>Đơn vận chuyển</span>
               <select id="delivery-order-id"></select>
             </label>
             <label class="field">
-              <span>Khach hang</span>
-              <input id="delivery-customer-name" type="text" placeholder="Ten khach hang" />
+              <span>Khách hàng</span>
+              <input id="delivery-customer-name" type="text" placeholder="Tên khách hàng" />
             </label>
             <label class="field">
-              <span>Dia chi</span>
-              <input id="delivery-address" type="text" placeholder="Dia chi giao hang" disabled />
+              <span>Địa chỉ</span>
+              <input id="delivery-address" type="text" placeholder="Địa chỉ giao hàng" disabled />
             </label>
             <label class="field">
               <span>NV kinh doanh</span>
               <select id="delivery-sales-user"></select>
             </label>
             <label class="field">
-              <span>Ket qua giao</span>
+              <span>Kết quả giao</span>
               <select id="delivery-result-status">
-                <option value="delivered">Giao thanh cong</option>
-                <option value="partial">Giao mot phan</option>
-                <option value="rescheduled">Khach hen lai</option>
-                <option value="failed">Khong giao duoc</option>
+                <option value="delivered">Giao thành công</option>
+                <option value="partial">Giao một phần</option>
+                <option value="rescheduled">Khách hẹn lại</option>
+                <option value="failed">Không giao được</option>
               </select>
             </label>
             <label class="field">
-              <span>Thoi gian hoan thanh</span>
+              <span>Thời gian hoàn thành</span>
               <input id="delivery-completed-at" type="datetime-local" />
             </label>
             <label class="field">
-              <span>Thanh toan</span>
+              <span>Thanh toán</span>
               <select id="delivery-payment-status">
-                <option value="unpaid">Chua thanh toan</option>
-                <option value="paid">Da thanh toan</option>
+                <option value="unpaid">Chưa thanh toán</option>
+                <option value="paid">Đã thanh toán</option>
               </select>
             </label>
             <label class="field">
-              <span>Hinh thuc</span>
+              <span>Hình thức</span>
               <select id="delivery-payment-method">
-                <option value="">Chua ro</option>
-                <option value="cash">Tien mat</option>
-                <option value="bank_transfer">Chuyen khoan</option>
+                <option value="">Chưa rõ</option>
+                <option value="cash">Tiền mặt</option>
+                <option value="bank_transfer">Chuyển khoản</option>
               </select>
             </label>
             <label class="field field-full">
-              <span>Ghi chu</span>
-              <textarea id="delivery-note" rows="3" placeholder="Them ghi chu neu can"></textarea>
+              <span>Ghi chú</span>
+              <textarea id="delivery-note" rows="3" placeholder="Thêm ghi chú nếu cần"></textarea>
             </label>
             <div class="form-actions">
-              <button class="primary-button" id="delivery-submit" type="submit">Cap nhat giao hang</button>
+              <button class="primary-button" id="delivery-submit" type="submit">Cập nhật giao hàng</button>
             </div>
           </form>
         </section>
@@ -211,29 +211,29 @@
           <div class="panel-head">
             <div>
               <p class="panel-kicker">2 / 4</p>
-              <h2>Bang tinh bang dinh</h2>
+              <h2>Bảng tính băng dính</h2>
             </div>
-            <span class="mini-badge" id="tape-source-badge">Dang tai du lieu</span>
+            <span class="mini-badge" id="tape-source-badge">Đang tải dữ liệu</span>
           </div>
           <div class="panel-subhead">
-            <p class="panel-description">Nhap thong so co ban va xem ngay san luong, so tay can cat, luong du va luong xuat.</p>
-            <span class="panel-chip">San xuat</span>
+            <p class="panel-description">Nhập thông số cơ bản và xem ngay sản lượng, số tay cần cắt, lượng dư và lượng xuất.</p>
+            <span class="panel-chip">Sản xuất</span>
           </div>
           <form class="form-grid" id="tape-form">
             <label class="field">
-              <span>Loai bang</span>
+              <span>Loại băng</span>
               <select id="tape-type"></select>
             </label>
             <label class="field">
-              <span>So luong don</span>
+              <span>Số lượng đơn</span>
               <input id="tape-order-quantity" type="number" min="0" step="1" />
             </label>
             <label class="field">
-              <span>Loai loi</span>
+              <span>Loại lõi</span>
               <select id="tape-core-type"></select>
             </label>
             <label class="field">
-              <span>Dong goi</span>
+              <span>Đóng gói</span>
               <input id="tape-packaging" type="number" min="0" step="1" />
             </label>
             <label class="field">
@@ -241,33 +241,33 @@
               <input id="tape-jumbo-height" type="number" min="0" step="1" />
             </label>
             <label class="field">
-              <span>Kho loi (mm)</span>
+              <span>Khổ lõi (mm)</span>
               <input id="tape-core-width" type="number" min="0" step="1" />
             </label>
           </form>
           <div class="metrics-grid" id="tape-metrics">
             <article class="metric-card">
-              <span>Thanh pham</span>
+              <span>Thành phẩm</span>
               <strong id="tape-finished-quantity">0</strong>
             </article>
             <article class="metric-card">
-              <span>Cuon moi tay</span>
+              <span>Cuộn mỗi tay</span>
               <strong id="tape-rolls-per-hand">0</strong>
             </article>
             <article class="metric-card">
-              <span>Du mm</span>
+              <span>Dư mm</span>
               <strong id="tape-remaining-mm">0</strong>
             </article>
             <article class="metric-card">
-              <span>So tay can</span>
+              <span>Số tay cần</span>
               <strong id="tape-hands-needed">0</strong>
             </article>
             <article class="metric-card">
-              <span>Tong san luong</span>
+              <span>Tổng sản lượng</span>
               <strong id="tape-total-produced">0</strong>
             </article>
             <article class="metric-card">
-              <span>Du xuat</span>
+              <span>Dư xuất</span>
               <strong id="tape-extra-produced">0</strong>
             </article>
           </div>
@@ -277,60 +277,56 @@
           <div class="panel-head">
             <div>
               <p class="panel-kicker">3 / 4</p>
-              <h2>Tao don van chuyen</h2>
+              <h2>Tạo đơn vận chuyển</h2>
             </div>
           </div>
           <div class="panel-subhead">
-            <p class="panel-description">Dung form rut gon cho don van chuyen. Neu can tao phieu san xuat, bam lai nut Tao don va chon phieu san xuat.</p>
-            <span class="panel-chip">Van chuyen</span>
+            <p class="panel-description">Dùng form rút gọn cho đơn vận chuyển. Nếu cần tạo phiếu sản xuất, bấm lại nút Tạo đơn và chọn phiếu sản xuất.</p>
+            <span class="panel-chip">Vận chuyển</span>
           </div>
           <div class="segment hidden" id="create-kind-switch">
-            <button class="segment-button is-active" data-order-kind="transport" type="button">Don van chuyen</button>
-            <button class="segment-button" data-order-kind="production" type="button">Phieu san xuat</button>
+            <button class="segment-button is-active" data-order-kind="transport" type="button">Đơn vận chuyển</button>
+            <button class="segment-button" data-order-kind="production" type="button">Phiếu sản xuất</button>
           </div>
           <form class="form-grid" id="create-form">
             <label class="field">
-              <span>Ma don</span>
-              <input id="create-order-id" type="text" placeholder="VD: DH-0002" />
-            </label>
-            <label class="field">
-              <span>Khach hang</span>
-              <input id="create-customer-name" type="text" placeholder="Ten khach hang" />
+              <span>Khách hàng</span>
+              <input id="create-customer-name" type="text" placeholder="Tên khách hàng" />
             </label>
             <label class="field">
               <span>NV kinh doanh</span>
               <select id="create-sales-user"></select>
             </label>
             <label class="field transport-only" id="create-delivery-user-field">
-              <span>NV giao hang</span>
+              <span>NV giao hàng</span>
               <select id="create-delivery-user"></select>
             </label>
             <label class="field transport-only" id="create-planned-at-field">
-              <span>Ngay can giao</span>
+              <span>Ngày cần giao</span>
               <input id="create-planned-at" type="datetime-local" />
             </label>
             <label class="field transport-only field-full" id="create-address-field">
-              <span>Dia chi giao</span>
-              <input id="create-address" type="text" placeholder="Dia chi giao hang" />
+              <span>Địa chỉ giao</span>
+              <input id="create-address" type="text" placeholder="Địa chỉ giao hàng" />
             </label>
             <label class="field field-full">
-              <span>Hang hoa / Noi dung</span>
+              <span>Hàng hóa / Nội dung</span>
               <textarea
                 id="create-order-items"
                 rows="5"
-                placeholder="Nhap tung dong, vi du:&#10;1. Bang dinh BOPP Vang 500g x 10 cuon&#10;2. Bang dinh trong 1kg x 5 cuon"
+                placeholder="Nhập từng dòng, ví dụ:&#10;1. Băng dính BOPP vàng 500g x 10 cuộn&#10;2. Băng dính trong 1kg x 5 cuộn"
               ></textarea>
             </label>
             <label class="field transport-only" id="create-order-value-field">
-              <span>Gia tri don</span>
+              <span>Giá trị đơn</span>
               <input id="create-order-value" type="number" min="0" step="1000" placeholder="0" />
             </label>
             <label class="field field-full">
-              <span>Ghi chu</span>
-              <textarea id="create-note" rows="3" placeholder="Ghi chu bo sung"></textarea>
+              <span>Ghi chú</span>
+              <textarea id="create-note" rows="3" placeholder="Ghi chú bổ sung"></textarea>
             </label>
             <div class="form-actions">
-              <button class="primary-button" id="create-submit" type="submit">Tao don</button>
+              <button class="primary-button" id="create-submit" type="submit">Tạo đơn</button>
             </div>
           </form>
         </section>
@@ -339,24 +335,24 @@
           <div class="panel-head">
             <div>
               <p class="panel-kicker">4 / 4</p>
-              <h2>Theo doi don</h2>
+              <h2>Theo dõi đơn</h2>
             </div>
-            <button class="ghost-button" id="refresh-orders-button" type="button">Tai lai</button>
+            <button class="ghost-button" id="refresh-orders-button" type="button">Tải lại</button>
           </div>
           <div class="panel-subhead">
-            <p class="panel-description">Loc nhanh theo loai don, tim kiem theo tu khoa va thao tac tiep ngay tu danh sach tong hop.</p>
-            <span class="panel-chip">Tong hop</span>
+            <p class="panel-description">Lọc nhanh theo loại đơn, tìm kiếm theo từ khóa và thao tác tiếp ngay từ danh sách tổng hợp.</p>
+            <span class="panel-chip">Tổng hợp</span>
           </div>
 
           <div class="segment" id="tracking-kind-switch">
-            <button class="segment-button is-active" data-track-kind="transport" type="button">Van chuyen</button>
-            <button class="segment-button" data-track-kind="production" type="button">San xuat</button>
+            <button class="segment-button is-active" data-track-kind="transport" type="button">Vận chuyển</button>
+            <button class="segment-button" data-track-kind="production" type="button">Sản xuất</button>
           </div>
 
           <div class="form-grid compact-grid">
             <label class="field field-full">
-              <span>Tim nhanh</span>
-              <input id="tracking-search" type="search" placeholder="Ma don, khach hang, NVKD, NV giao" />
+              <span>Tìm nhanh</span>
+              <input id="tracking-search" type="search" placeholder="Mã đơn, khách hàng, NVKD, NV giao" />
             </label>
           </div>
 
@@ -371,41 +367,34 @@
       <div class="production-create-shell">
         <header class="production-create-head">
           <div>
-            <p class="production-create-kicker">Dieu phoi</p>
-            <h2>Tao don san xuat moi</h2>
+            <p class="production-create-kicker">Điều phối</p>
+            <h2>Tạo đơn sản xuất mới</h2>
           </div>
-          <button class="production-close-button" id="close-production-create-button" type="button" aria-label="Dong">x</button>
+          <button class="production-close-button" id="close-production-create-button" type="button" aria-label="Đóng">x</button>
         </header>
 
         <form class="production-create-form" id="production-create-form">
           <div class="production-create-mobile-tip">
-            <strong>Co the vuot ngang va vuot doc</strong>
-            <span>Xoay ngang dien thoai se de nhap lieu hon, nhung ban van co the keo sang ngang hoac vuot xuong duoi de xem du tat ca cot.</span>
+            <strong>Có thể vuốt ngang và vuốt dọc</strong>
+            <span>Xoay ngang điện thoại sẽ dễ nhập liệu hơn, nhưng bạn vẫn có thể kéo sang ngang hoặc vuốt xuống dưới để xem đủ tất cả cột.</span>
           </div>
 
           <section class="production-sheet-card">
             <div class="production-sheet-header">
-              <h3 class="production-sheet-title">Phieu de nghi san xuat theo don dat hang</h3>
-              <label class="field">
-                <span>Don dat hang so</span>
-                <div class="production-prefixed-input">
-                  <span>DH</span>
-                  <input id="production-create-order-id" type="text" inputmode="numeric" placeholder="003001" />
-                </div>
-              </label>
+              <h3 class="production-sheet-title">Phiếu đề nghị sản xuất theo đơn đặt hàng</h3>
             </div>
 
             <div class="production-sheet-meta">
               <label class="field">
-                <span>Khach hang</span>
-                <input id="production-create-customer-name" type="text" placeholder="Ten khach hang / dai ly" />
+                <span>Khách hàng</span>
+                <input id="production-create-customer-name" type="text" placeholder="Tên khách hàng / đại lý" />
               </label>
               <label class="field">
-                <span>Nguoi yeu cau</span>
+                <span>Người yêu cầu</span>
                 <select id="production-create-requester"></select>
               </label>
               <label class="field">
-                <span>Thoi gian tao phieu</span>
+                <span>Thời gian tạo phiếu</span>
                 <input id="production-create-created-at" type="text" readonly />
               </label>
             </div>
@@ -413,67 +402,66 @@
             <div class="production-sheet-table">
               <div class="production-sheet-table-head" aria-hidden="true">
                 <span class="head-cell head-cell-tall head-stt">STT</span>
-                <span class="head-cell head-cell-tall head-code">Ma hang hoa</span>
-                <span class="head-cell head-cell-tall head-name">Ten hang hoa</span>
-                <span class="head-cell head-cell-tall head-norm">Dinh muc thuc</span>
+                <span class="head-cell head-cell-tall head-name">Tên hàng hóa</span>
+                <span class="head-cell head-cell-tall head-norm">Định mức thực</span>
                 <span class="head-cell head-cell-tall head-unit">DVT</span>
                 <span class="head-cell head-cell-tall head-qty">SL</span>
-                <span class="head-cell head-cell-group head-status">Tinh trang</span>
-                <span class="head-cell head-cell-sub head-done">Da SX</span>
-                <span class="head-cell head-cell-sub head-missing">Thieu</span>
-                <span class="head-cell head-cell-sub head-extra">Du</span>
-                <span class="head-cell head-cell-tall head-team">To may</span>
+                <span class="head-cell head-cell-group head-status">Tình trạng</span>
+                <span class="head-cell head-cell-sub head-done">Đã SX</span>
+                <span class="head-cell head-cell-sub head-missing">Thiếu</span>
+                <span class="head-cell head-cell-sub head-extra">Dư</span>
+                <span class="head-cell head-cell-tall head-team">Tổ máy</span>
               </div>
               <div id="production-create-items-list"></div>
-              <div class="production-items-empty" id="production-create-items-empty">Chua co dong hang hoa san xuat. Bam them de tao dong dau tien.</div>
+              <div class="production-items-empty" id="production-create-items-empty">Chưa có dòng hàng hóa sản xuất. Bấm thêm để tạo dòng đầu tiên.</div>
             </div>
 
-            <button class="production-add-item-button" id="production-create-add-item-button" type="button">+ Them dong san xuat</button>
+            <button class="production-add-item-button" id="production-create-add-item-button" type="button">+ Thêm dòng sản xuất</button>
 
             <label class="field">
-              <span>Ghi chu</span>
-              <textarea id="production-create-note" rows="3" placeholder="Kho san xuat, vat tu, luu y cho san xuat..."></textarea>
+              <span>Ghi chú</span>
+              <textarea id="production-create-note" rows="3" placeholder="Kho sản xuất, vật tư, lưu ý cho sản xuất..."></textarea>
             </label>
 
             <fieldset class="production-turnaround">
-              <legend>De nghi tra hang trong</legend>
+              <legend>Đề nghị trả hàng trong</legend>
               <label><input type="radio" name="production-create-turnaround" value="24H" /> 24H</label>
               <label><input type="radio" name="production-create-turnaround" value="48H" /> 48H</label>
               <label><input type="radio" name="production-create-turnaround" value="72H" checked /> 72H</label>
               <label class="production-turnaround-other">
-                <input type="radio" name="production-create-turnaround" value="Khac" />
-                <span>Khac</span>
+                <input type="radio" name="production-create-turnaround" value="Khác" />
+                <span>Khác</span>
                 <input id="production-create-turnaround-other" type="text" placeholder="..." />
               </label>
             </fieldset>
 
             <div class="production-signatures" aria-hidden="true">
               <div class="production-signature-box">
-                <strong>Nguoi yeu cau</strong>
-                <span>Ky va ghi ro ho ten</span>
+                <strong>Người yêu cầu</strong>
+                <span>Ký và ghi rõ họ tên</span>
                 <p class="production-signature-name" id="production-create-requester-signature">-</p>
               </div>
               <div class="production-signature-box">
-                <strong>Nguoi thuc hien</strong>
-                <span>Ky va ghi ro ho ten</span>
+                <strong>Người thực hiện</strong>
+                <span>Ký và ghi rõ họ tên</span>
                 <div class="production-signature-name production-signature-list" id="production-create-performer-signature">-</div>
               </div>
               <div class="production-signature-box">
-                <strong>Dong goi</strong>
-                <span>Ky va ghi ro ho ten</span>
+                <strong>Đóng gói</strong>
+                <span>Ký và ghi rõ họ tên</span>
                 <div class="production-signature-name production-signature-list" id="production-create-packaging-signature">-</div>
               </div>
               <div class="production-signature-box">
-                <strong>Giao nhan</strong>
-                <span>Ky va ghi ro ho ten</span>
+                <strong>Giao nhận</strong>
+                <span>Ký và ghi rõ họ tên</span>
                 <div class="production-signature-name production-signature-list" id="production-create-receipt-signature">-</div>
               </div>
             </div>
           </section>
 
           <div class="production-create-actions">
-            <button class="ghost-button" id="cancel-production-create-button" type="button">Dong</button>
-            <button class="primary-button" id="submit-production-create-button" type="submit">Tao phieu san xuat</button>
+            <button class="ghost-button" id="cancel-production-create-button" type="button">Đóng</button>
+            <button class="primary-button" id="submit-production-create-button" type="submit">Tạo phiếu sản xuất</button>
           </div>
         </form>
       </div>

@@ -131,7 +131,6 @@ const refreshOrdersButton = document.querySelector("#refresh-orders-button");
 
 const productionCreateScreen = document.querySelector("#production-create-screen");
 const productionCreateForm = document.querySelector("#production-create-form");
-const productionCreateOrderId = document.querySelector("#production-create-order-id");
 const productionCreateCustomerName = document.querySelector("#production-create-customer-name");
 const productionCreateRequester = document.querySelector("#production-create-requester");
 const productionCreateCreatedAt = document.querySelector("#production-create-created-at");
@@ -154,7 +153,7 @@ const TelegramWebApp = window.Telegram?.WebApp || null;
 
 init().catch((error) => {
   console.error(error);
-  showToast(error.message || "Khong the khoi dong mini app.", "error");
+  showToast(error.message || "Không thể khởi động mini app.", "error");
 });
 
 async function init() {
@@ -180,7 +179,7 @@ function initTelegramShell() {
   window.visualViewport?.addEventListener("resize", updateTelegramViewportMetrics);
 
   if (!TelegramWebApp) {
-    heroUserMeta.textContent = "Dang test tren browser";
+    heroUserMeta.textContent = "Đang test trên trình duyệt";
     return;
   }
 
@@ -200,7 +199,7 @@ function initTelegramShell() {
       void 0;
     }
   }
-  heroUserMeta.textContent = "Dang mo trong Telegram";
+  heroUserMeta.textContent = "Đang mở trong Telegram";
 }
 
 function bindEvents() {
@@ -227,15 +226,11 @@ function bindEvents() {
   productionCreateRequester?.addEventListener("change", syncProductionCreateRequesterSignature);
   productionCreateForm?.addEventListener("submit", handleProductionCreateSubmit);
   productionCreateItemsList?.addEventListener("input", handleProductionCreateOrderItemInput);
-  productionCreateItemsList?.addEventListener("focusin", handleProductionCreateOrderItemFocus);
-  productionCreateItemsList?.addEventListener("keydown", handleProductionCreateOrderItemKeydown);
-  productionCreateItemsList?.addEventListener("click", handleProductionCreateOrderItemClick);
-  document.addEventListener("pointerdown", handleProductionCreateOrderItemOutsideClick);
   actionButtons.forEach((button) => {
     button.addEventListener("click", () => {
       const section = button.dataset.section || "";
       if (!isSectionAllowed(section)) {
-        showToast("Ban khong co quyen dung muc nay.", "error");
+        showToast("Bạn không có quyền dùng mục này.", "error");
         return;
       }
       if (section === "create") {
@@ -278,7 +273,7 @@ function bindEvents() {
       await loadOrders();
       showToast("Da tai lai danh sach don.", "success");
     } catch (error) {
-      showToast(error.message || "Khong the tai lai don hang.", "error");
+      showToast(error.message || "Không thể tải lại đơn hàng.", "error");
     } finally {
       refreshOrdersButton.disabled = false;
     }
@@ -432,7 +427,7 @@ function closeCreateMenu() {
 
 async function openProductionCreateScreen() {
   if (!canCreateOrder()) {
-    showToast("Ban khong co quyen tao phieu san xuat.", "error");
+    showToast("Bạn không có quyền tạo phiếu sản xuất.", "error");
     return;
   }
   await Promise.all([loadUsers(), loadOrders(), loadOrderProducts()]);
@@ -467,7 +462,7 @@ async function handleLoginSubmit(event) {
     if (state.challengeToken) {
       const otpCode = String(loginOtp?.value || "").trim();
       if (!otpCode) {
-        throw new Error("Can nhap ma OTP.");
+        throw new Error("Cần nhập mã OTP.");
       }
       const payload = await postJson(
         loginVerifyUrl,
@@ -479,14 +474,14 @@ async function handleLoginSubmit(event) {
       );
       finishLogin(payload.token, payload.currentUser);
       await bootstrapWorkspace();
-      showToast("Dang nhap thanh cong.", "success");
+      showToast("Đăng nhập thành công.", "success");
       return;
     }
 
     const username = String(loginUsername?.value || "").trim();
     const password = String(loginPassword?.value || "");
     if (!username || !password) {
-      throw new Error("Can nhap tai khoan va mat khau.");
+      throw new Error("Cần nhập tài khoản và mật khẩu.");
     }
 
     const payload = await postJson(
@@ -501,18 +496,18 @@ async function handleLoginSubmit(event) {
     if (payload.otp_required) {
       state.challengeToken = String(payload.challengeToken || "").trim();
       otpBlock?.classList.remove("hidden");
-      otpNote.textContent = payload.delivery || "Ma OTP da duoc gui.";
-      loginSubmit.textContent = "Xac minh OTP";
+      otpNote.textContent = payload.delivery || "Mã OTP đã được gửi.";
+      loginSubmit.textContent = "Xác minh OTP";
       loginOtp?.focus();
-      showToast("Nhap ma OTP de hoan tat dang nhap.", "success");
+      showToast("Nhập mã OTP để hoàn tất đăng nhập.", "success");
       return;
     }
 
     finishLogin(payload.token, payload.currentUser);
     await bootstrapWorkspace();
-    showToast("Dang nhap thanh cong.", "success");
+    showToast("Đăng nhập thành công.", "success");
   } catch (error) {
-    showToast(error.message || "Khong the dang nhap.", "error");
+    showToast(error.message || "Không thể đăng nhập.", "error");
   } finally {
     loginSubmit.disabled = false;
   }
@@ -549,7 +544,7 @@ async function handleLogout() {
     state.notificationArchive = [];
     closeProductionCreateScreen({ silent: true });
     showLoginPanel();
-    showToast("Da dang xuat.", "success");
+    showToast("Đã đăng xuất.", "success");
   }
 }
 
@@ -565,7 +560,7 @@ function resetLoginState() {
   loginForm?.reset();
   otpBlock?.classList.add("hidden");
   otpNote.textContent = "";
-  loginSubmit.textContent = "Dang nhap";
+  loginSubmit.textContent = "Đăng nhập";
 }
 
 async function loadUsers() {
@@ -634,30 +629,6 @@ async function syncTelegramLink() {
   } catch {
     void 0;
   }
-}
-
-function extractOrderSequenceValue(value) {
-  const match = String(value || "")
-    .trim()
-    .toUpperCase()
-    .match(/^DH-(\d+)$/);
-  return match ? Number(match[1]) : NaN;
-}
-
-function formatOrderSequenceValue(value) {
-  const numeric = Number(value);
-  if (!Number.isFinite(numeric) || numeric < 0) {
-    return "003000";
-  }
-  return String(Math.trunc(numeric)).padStart(6, "0");
-}
-
-function getNextProductionOrderSequence() {
-  const numericValues = state.orders
-    .map((item) => extractOrderSequenceValue(item?.order_id || ""))
-    .filter((value) => Number.isFinite(value));
-  const maxValue = numericValues.length ? Math.max(...numericValues) : 2999;
-  return formatOrderSequenceValue(Math.max(3000, maxValue + 1));
 }
 
 function updateTelegramViewportMetrics() {
@@ -849,7 +820,7 @@ function renderProductionCreateOrderItemSuggestions(input, queryOverride = null)
   if (!suggestions.length) {
     wrap.dataset.expanded = "true";
     wrap.dataset.activeIndex = "-1";
-    panel.innerHTML = `${searchMarkup}<div class="order-item-suggestion-empty">Khong tim thay hang hoa phu hop</div>`;
+    panel.innerHTML = `${searchMarkup}<div class="order-item-suggestion-empty">Không tìm thấy hàng hóa phù hợp</div>`;
     panel.classList.remove("hidden");
     return;
   }
@@ -926,9 +897,6 @@ function selectProductionCreateOrderItemSuggestion(input, productName) {
 function resetProductionCreateForm() {
   productionCreateForm?.reset();
   populateProductionCreateRequesterOptions();
-  if (productionCreateOrderId) {
-    productionCreateOrderId.value = getNextProductionOrderSequence();
-  }
   if (productionCreateCreatedAt) {
     productionCreateCreatedAt.value = formatDateTime(new Date().toISOString());
   }
@@ -978,7 +946,7 @@ function populateProductionCreateRequesterOptions() {
           return `<option value="${escapeHtml(user.id)}" ${selected}>${escapeHtml(`${user.name || user.username || "-"} • ${code}`)}</option>`;
         })
         .join("")
-    : '<option value="">Khong co nguoi yeu cau phu hop</option>';
+    : '<option value="">Không có người yêu cầu phù hợp</option>';
 
   productionCreateRequester.disabled = !canChoose;
   syncProductionCreateRequesterSignature();
@@ -989,8 +957,8 @@ function syncProductionCreateRequesterSignature() {
     return;
   }
   const selectedText = String(productionCreateRequester?.selectedOptions?.[0]?.textContent || "").trim();
-  const primaryLabel = selectedText.split(" - ")[0].trim();
-  productionCreateRequesterSignature.textContent = selectedText ? selectedText.split("•")[0].trim() : "-";
+  const primaryLabel = selectedText.split(/\s+[•-]\s+/)[0].trim();
+  productionCreateRequesterSignature.textContent = primaryLabel || "-";
   if (primaryLabel) {
     productionCreateRequesterSignature.textContent = primaryLabel;
   }
@@ -1021,13 +989,8 @@ function addProductionCreateItemRow(values = {}) {
   row.setAttribute("data-production-create-row", "true");
   row.innerHTML = `
     <div class="production-create-index"><span data-field="index-label">1</span></div>
-    <input class="production-create-code" data-field="code" type="text" value="${escapeHtml(values.code || "")}" />
     <div class="order-item-name-wrap production-create-name-wrap">
-      <textarea class="production-create-name order-item-name" data-field="name" rows="1" placeholder="Tim hoac nhap hang hoa" autocomplete="off" spellcheck="false">${escapeHtml(values.name || "")}</textarea>
-      <button type="button" class="order-item-name-toggle" data-order-item-toggle aria-label="Mo danh sach hang hoa">
-        <span></span>
-      </button>
-      <div class="order-item-suggestions hidden"></div>
+      <textarea class="production-create-name order-item-name" data-field="name" rows="1" placeholder="Nhập tên hàng hóa" autocomplete="off" spellcheck="false">${escapeHtml(values.name || "")}</textarea>
     </div>
     <input class="production-create-norm" data-field="norm" type="text" value="${escapeHtml(values.norm || "")}" />
     <select class="production-create-unit" data-field="unit">${buildProductionUnitOptions(values.name || "", values.unit || "")}</select>
@@ -1038,7 +1001,7 @@ function addProductionCreateItemRow(values = {}) {
     <input class="production-create-team" data-field="team" type="number" min="0" step="1" value="${escapeHtml(values.team || "")}" />
   `;
 
-  row.querySelectorAll('input[data-field="quantity"], input[data-field="done"], input[data-field="code"]').forEach((input) => {
+  row.querySelectorAll('input[data-field="quantity"], input[data-field="done"]').forEach((input) => {
     input.addEventListener("input", () => updateProductionCreateDerivedFields(row));
     input.addEventListener("change", () => updateProductionCreateDerivedFields(row));
   });
@@ -1051,7 +1014,7 @@ function addProductionCreateItemRow(values = {}) {
   syncProductionCreateRowProductDetails(row);
   updateProductionCreateDerivedFields(row);
   syncProductionCreateDraft();
-  row.querySelector('[data-field="code"]')?.focus();
+  row.querySelector('[data-field="name"]')?.focus();
 }
 
 function autoResizeProductionCreateName(input) {
@@ -1102,173 +1065,33 @@ function syncProductionCreateDraft() {
 }
 
 function handleProductionCreateOrderItemInput(event) {
-  const searchInput = event.target?.closest?.("[data-order-item-search]");
-  if (searchInput) {
-    const wrap = searchInput.closest(".order-item-name-wrap");
-    const input = wrap?.querySelector('[data-field="name"]');
-    if (!wrap || !input) {
-      return;
-    }
-    wrap.dataset.locked = "false";
-    renderProductionCreateOrderItemSuggestions(input, searchInput.value || "");
-    const nextSearchInput = wrap.querySelector("[data-order-item-search]");
-    nextSearchInput?.focus();
-    nextSearchInput?.setSelectionRange(nextSearchInput.value.length, nextSearchInput.value.length);
-    return;
-  }
-
   const nameInput = event.target?.closest?.(".production-create-name");
   if (nameInput) {
-    const wrap = nameInput.closest(".order-item-name-wrap");
-    if (wrap?.dataset.locked === "true") {
-      return;
-    }
-    renderProductionCreateOrderItemSuggestions(nameInput);
     syncProductionCreateRowProductDetails(nameInput.closest("[data-production-create-row]"));
-    syncProductionCreateDraft();
-    return;
-  }
-
-  const codeInput = event.target?.closest?.(".production-create-code");
-  if (codeInput) {
-    syncProductionCreateRowProductDetails(codeInput.closest("[data-production-create-row]"));
     syncProductionCreateDraft();
   }
 }
 
 function handleProductionCreateOrderItemFocus(event) {
-  const input = event.target?.closest?.(".production-create-name");
-  if (!input) {
-    return;
-  }
-  closeProductionCreateOrderItemSuggestions(input);
+  void event;
 }
 
 function handleProductionCreateOrderItemKeydown(event) {
-  const searchInput = event.target?.closest?.("[data-order-item-search]");
-  if (searchInput) {
-    const wrap = searchInput.closest(".order-item-name-wrap");
-    const input = wrap?.querySelector('[data-field="name"]');
-    const buttons = Array.from(wrap?.querySelectorAll("[data-order-item-option]") || []);
-    const activeIndex = Number(wrap?.dataset.activeIndex || -1);
-    if (!wrap || !input) {
-      return;
-    }
-
-    if (event.key === "ArrowDown") {
-      event.preventDefault();
-      setActiveProductionCreateOrderItemSuggestion(wrap, buttons.length ? activeIndex + 1 : 0);
-      return;
-    }
-    if (event.key === "ArrowUp") {
-      event.preventDefault();
-      setActiveProductionCreateOrderItemSuggestion(wrap, activeIndex <= 0 ? 0 : activeIndex - 1);
-      return;
-    }
-    if (event.key === "Enter" && buttons.length && activeIndex >= 0) {
-      event.preventDefault();
-      selectProductionCreateOrderItemSuggestion(input, buttons[activeIndex].dataset.orderItemOption || "");
-      return;
-    }
-    if (event.key === "Escape") {
-      event.preventDefault();
-      closeProductionCreateOrderItemSuggestions();
-      input.focus();
-    }
-    return;
-  }
-
-  const input = event.target?.closest?.(".production-create-name");
-  if (!input) {
-    return;
-  }
-
-  const wrap = input.closest(".order-item-name-wrap");
-  const buttons = Array.from(wrap?.querySelectorAll("[data-order-item-option]") || []);
-  const activeIndex = Number(wrap?.dataset.activeIndex || -1);
-  if (event.key === "ArrowDown") {
-    event.preventDefault();
-    if (!buttons.length) {
-      renderProductionCreateOrderItemSuggestions(input);
-      return;
-    }
-    setActiveProductionCreateOrderItemSuggestion(wrap, activeIndex + 1);
-    return;
-  }
-  if (event.key === "ArrowUp") {
-    event.preventDefault();
-    if (!buttons.length) {
-      renderProductionCreateOrderItemSuggestions(input);
-      return;
-    }
-    setActiveProductionCreateOrderItemSuggestion(wrap, activeIndex <= 0 ? 0 : activeIndex - 1);
-    return;
-  }
-  if (event.key === "Enter" && buttons.length && activeIndex >= 0) {
-    event.preventDefault();
-    selectProductionCreateOrderItemSuggestion(input, buttons[activeIndex].dataset.orderItemOption || "");
-    return;
-  }
-  if (event.key === "Escape") {
-    closeProductionCreateOrderItemSuggestions();
-  }
+  void event;
 }
 
 function handleProductionCreateOrderItemClick(event) {
-  const suggestionButton = event.target?.closest?.("[data-order-item-option]");
-  if (suggestionButton) {
-    const input = suggestionButton.closest(".order-item-name-wrap")?.querySelector('[data-field="name"]');
-    selectProductionCreateOrderItemSuggestion(input, suggestionButton.dataset.orderItemOption || "");
-    return;
-  }
-
-  const toggleButton = event.target?.closest?.("[data-order-item-toggle]");
-  if (toggleButton) {
-    const wrap = toggleButton.closest(".order-item-name-wrap");
-    const input = wrap?.querySelector('[data-field="name"]');
-    const isExpanded = wrap?.dataset.expanded === "true";
-    if (!wrap || !input) {
-      return;
-    }
-    if (isExpanded) {
-      closeProductionCreateOrderItemSuggestions();
-      wrap.dataset.locked = "true";
-      return;
-    }
-    wrap.dataset.locked = "false";
-    closeProductionCreateOrderItemSuggestions(input);
-    renderProductionCreateOrderItemSuggestions(input, "");
-    input.focus();
-    return;
-  }
-
-  const nameInput = event.target?.closest?.(".production-create-name");
-  if (nameInput) {
-    const wrap = nameInput.closest(".order-item-name-wrap");
-    if (!wrap) {
-      return;
-    }
-    if (wrap.dataset.expanded === "true") {
-      return;
-    }
-    wrap.dataset.locked = "false";
-    closeProductionCreateOrderItemSuggestions(nameInput);
-    renderProductionCreateOrderItemSuggestions(nameInput, "");
-  }
+  void event;
 }
 
 function handleProductionCreateOrderItemOutsideClick(event) {
-  if (event.target?.closest?.(".order-item-name-wrap")) {
-    return;
-  }
-  closeProductionCreateOrderItemSuggestions();
+  void event;
 }
 
 function buildProductionCreateItemsSummary() {
   const rows = Array.from(productionCreateItemsList?.querySelectorAll("[data-production-create-row]") || []);
   return rows
     .map((row, index) => {
-      const code = String(row.querySelector('[data-field="code"]')?.value || "").trim() || "-";
       const name = String(row.querySelector('[data-field="name"]')?.value || "").trim();
       const norm = String(row.querySelector('[data-field="norm"]')?.value || "").trim() || "-";
       const unit = String(row.querySelector('[data-field="unit"]')?.value || "").trim() || "-";
@@ -1277,10 +1100,10 @@ function buildProductionCreateItemsSummary() {
       const missing = String(row.querySelector('[data-field="missing"]')?.value || "").trim() || "0";
       const extra = String(row.querySelector('[data-field="extra"]')?.value || "").trim() || "0";
       const team = String(row.querySelector('[data-field="team"]')?.value || "").trim() || "-";
-      if (!name && !code) {
+      if (!name) {
         return "";
       }
-      return `${index + 1}. ${code} | ${name} | DM ${norm} | ${unit} | SL ${quantity} | Da SX ${done} | Thieu ${missing} | Du ${extra} | To ${team}`;
+      return `${index + 1}. ${name} | ĐM ${norm} | ${unit} | SL ${quantity} | Đã SX ${done} | Thiếu ${missing} | Dư ${extra} | Tổ ${team}`;
     })
     .filter(Boolean)
     .join("\n");
@@ -1292,10 +1115,10 @@ function buildProductionCreateNote() {
     productionCreateForm?.querySelector('input[name="production-create-turnaround"]:checked')?.value || "",
   ).trim();
   const turnaround =
-    turnaroundValue === "Khac"
-      ? `Khac: ${String(productionCreateTurnaroundOther?.value || "").trim()}`
+    turnaroundValue === "Khác"
+      ? `Khác: ${String(productionCreateTurnaroundOther?.value || "").trim()}`
       : turnaroundValue;
-  return [note, turnaround ? `De nghi tra hang trong: ${turnaround}` : ""].filter(Boolean).join("\n");
+  return [note, turnaround ? `Đề nghị trả hàng trong: ${turnaround}` : ""].filter(Boolean).join("\n");
 }
 
 async function handleProductionCreateSubmit(event) {
@@ -1309,7 +1132,7 @@ async function handleProductionCreateSubmit(event) {
   const requesterId = String(productionCreateRequester?.value || "").trim();
   const orderItems = buildProductionCreateItemsSummary();
   if (!customerName || !requesterId) {
-    showToast("Can nhap khach hang va nguoi yeu cau.", "error");
+    showToast("Cần nhập khách hàng và người yêu cầu.", "error");
     return;
   }
   if (!orderItems) {
@@ -1320,7 +1143,7 @@ async function handleProductionCreateSubmit(event) {
   submitProductionCreateButton && (submitProductionCreateButton.disabled = true);
   try {
     const payload = await postJson(orderCreateUrl, {
-      order_id: normalizeOrderIdValue(productionCreateOrderId?.value || ""),
+      order_id: "",
       customer_name: customerName,
       sales_user_id: requesterId,
       delivery_user_id: "",
@@ -1335,11 +1158,11 @@ async function handleProductionCreateSubmit(event) {
     await loadOrders();
     await loadNotifications({ silent: true });
     closeProductionCreateScreen({ silent: true });
-    showToast("Da tao phieu san xuat.", "success");
+    showToast("Đã tạo phiếu sản xuất.", "success");
     await openSection("tracking");
     setTrackingKind("production");
   } catch (error) {
-    showToast(error.message || "Khong the tao phieu san xuat.", "error");
+    showToast(error.message || "Không thể tạo phiếu sản xuất.", "error");
   } finally {
     submitProductionCreateButton && (submitProductionCreateButton.disabled = false);
   }
@@ -1396,7 +1219,7 @@ async function loadTapeConfig() {
     state.tapeLoaded = true;
     applyTapeConfig();
   } catch (error) {
-    tapeSourceBadge.textContent = "Khong tai duoc config";
+    tapeSourceBadge.textContent = "Không tải được cấu hình";
     throw error;
   }
 }
@@ -1410,13 +1233,13 @@ function applyTapeConfig() {
     ? products
         .map((item) => `<option value="${escapeHtml(item.code)}">${escapeHtml(item.code)}</option>`)
         .join("")
-    : '<option value="">Khong co du lieu</option>';
+    : '<option value="">Không có dữ liệu</option>';
 
   tapeCoreType.innerHTML = cores.length
     ? cores
         .map((item) => `<option value="${escapeHtml(item.code)}">${escapeHtml(item.code)}</option>`)
         .join("")
-    : '<option value="">Khong co du lieu</option>';
+    : '<option value="">Không có dữ liệu</option>';
 
   tapeType.value = products.some((item) => item.code === defaults.tape_type) ? defaults.tape_type : products[0]?.code || "";
   tapeCoreType.value = cores.some((item) => item.code === defaults.core_type) ? defaults.core_type : cores[0]?.code || "";
@@ -1424,7 +1247,7 @@ function applyTapeConfig() {
   tapePackaging.value = String(defaults.packaging || 0);
   tapeJumboHeight.value = String(defaults.jumbo_height || products[0]?.jumbo_height || 0);
   tapeCoreWidth.value = String(defaults.core_width || cores[0]?.width_mm || 0);
-  tapeSourceBadge.textContent = state.tapeConfig?.fallback ? "Dang dung cache" : "Dang dung sheet live";
+  tapeSourceBadge.textContent = state.tapeConfig?.fallback ? "Đang dùng cache" : "Đang dùng sheet live";
   updateTapeResults();
 }
 
@@ -1476,13 +1299,13 @@ function populateCreateUserOptions() {
     ? salesUsers
         .map((user) => `<option value="${escapeHtml(user.id)}">${escapeHtml(buildUserLabel(user))}</option>`)
         .join("")
-    : '<option value="">Khong co NV kinh doanh</option>';
+    : '<option value="">Không có NV kinh doanh</option>';
 
   createDeliveryUser.innerHTML = deliveryUsers.length
     ? deliveryUsers
         .map((user) => `<option value="${escapeHtml(user.id)}">${escapeHtml(buildUserLabel(user))}</option>`)
         .join("")
-    : '<option value="">Khong co NV giao hang</option>';
+    : '<option value="">Không có NV giao hàng</option>';
 
   if (!canChooseSalesAssignee() && state.currentUser?.id) {
     createSalesUser.value = String(state.currentUser.id || "");
@@ -1501,7 +1324,7 @@ function populateDeliverySalesOptions() {
     ? salesUsers
         .map((user) => `<option value="${escapeHtml(user.id)}">${escapeHtml(buildUserLabel(user))}</option>`)
         .join("")
-    : '<option value="">Khong co NV kinh doanh</option>';
+    : '<option value="">Không có NV kinh doanh</option>';
 }
 
 function populateDeliveryOrders() {
@@ -1510,7 +1333,7 @@ function populateDeliveryOrders() {
     ? options
         .map((order) => `<option value="${escapeHtml(order.order_id || "")}">${escapeHtml(buildDeliveryOptionLabel(order))}</option>`)
         .join("")
-    : '<option value="">Khong co don can giao</option>';
+    : '<option value="">Không có đơn cần giao</option>';
 }
 
 function autofillDeliveryForm() {
@@ -1568,7 +1391,7 @@ async function handleDeliverySubmit(event) {
     renderTrackingOrders();
     showToast("Da cap nhat giao hang.", "success");
   } catch (error) {
-    showToast(error.message || "Khong the cap nhat giao hang.", "error");
+    showToast(error.message || "Không thể cập nhật giao hàng.", "error");
   } finally {
     deliverySubmit.disabled = false;
   }
@@ -1582,13 +1405,15 @@ function setOrderKind(kind) {
 
   const isTransport = state.orderKind === "transport";
   transportOnlyFields.forEach((field) => field.classList.toggle("hidden", !isTransport));
-  createOrderId.placeholder = isTransport ? "VD: DH-0002" : "Bo trong de he thong tu cap ma";
+  if (createOrderId) {
+    createOrderId.placeholder = "Để trống để hệ thống tự cấp mã";
+  }
 }
 
 async function handleCreateSubmit(event) {
   event.preventDefault();
   if (!canCreateOrder()) {
-    showToast("Ban khong co quyen tao don.", "error");
+    showToast("Bạn không có quyền tạo đơn.", "error");
     return;
   }
 
@@ -1613,10 +1438,10 @@ async function handleCreateSubmit(event) {
     populateDeliveryOrders();
     setTrackingKind(state.orderKind === "production" ? "production" : "transport");
     renderTrackingOrders();
-    showToast(state.orderKind === "production" ? "Da tao phieu san xuat." : "Da tao don van chuyen.", "success");
+    showToast(state.orderKind === "production" ? "Đã tạo phiếu sản xuất." : "Đã tạo đơn vận chuyển.", "success");
     await openSection("tracking");
   } catch (error) {
-    showToast(error.message || "Khong the tao don.", "error");
+    showToast(error.message || "Không thể tạo đơn.", "error");
   } finally {
     createSubmit.disabled = false;
   }
@@ -1669,7 +1494,7 @@ function renderTrackingOrders() {
   });
 
   if (!visibleOrders.length) {
-    trackingList.innerHTML = '<article class="order-card"><p class="empty-state">Khong co don phu hop.</p></article>';
+    trackingList.innerHTML = '<article class="order-card"><p class="empty-state">Không có đơn phù hợp.</p></article>';
     return;
   }
 
@@ -1694,18 +1519,18 @@ function buildOrderCardMarkup(order) {
   const status = isProduction ? getProductionStatus(order) : getTransportStatus(order);
   const factLines = isProduction
     ? [
-        `Nguoi yeu cau: ${order.sales_user_name || "-"}`,
-        order.production_claimed_by_names ? `Dang nhan boi: ${order.production_claimed_by_names}` : "Chua co nguoi nhan",
-        order.created_at ? `Ngay tao: ${formatDateTime(order.created_at)}` : "",
-        order.note ? `Ghi chu: ${order.note}` : "",
+        `Người yêu cầu: ${order.sales_user_name || "-"}`,
+        order.production_claimed_by_names ? `Đang nhận bởi: ${order.production_claimed_by_names}` : "Chưa có người nhận",
+        order.created_at ? `Ngày tạo: ${formatDateTime(order.created_at)}` : "",
+        order.note ? `Ghi chú: ${order.note}` : "",
       ].filter(Boolean)
     : [
         `NVKD: ${order.sales_user_name || "-"}`,
         `NV giao: ${order.delivery_user_name || "-"}`,
-        order.planned_delivery_at ? `Can giao: ${formatDateTime(order.planned_delivery_at)}` : "",
-        order.completed_at ? `Hoan thanh: ${formatDateTime(order.completed_at)}` : "Chua giao",
-        `Thanh toan: ${labelPaymentStatus(order.payment_status || "unpaid")}`,
-        order.delivery_address ? `Dia chi: ${order.delivery_address}` : "",
+        order.planned_delivery_at ? `Cần giao: ${formatDateTime(order.planned_delivery_at)}` : "",
+        order.completed_at ? `Hoàn thành: ${formatDateTime(order.completed_at)}` : "Chưa giao",
+        `Thanh toán: ${labelPaymentStatus(order.payment_status || "unpaid")}`,
+        order.delivery_address ? `Địa chỉ: ${order.delivery_address}` : "",
       ].filter(Boolean);
 
   return `
@@ -1717,13 +1542,13 @@ function buildOrderCardMarkup(order) {
         </div>
         <div class="order-tags">
           <span class="tag ${escapeHtml(status.tone)}">${escapeHtml(status.label)}</span>
-          ${isProduction ? '<span class="tag">San xuat</span>' : '<span class="tag">Van chuyen</span>'}
+          ${isProduction ? '<span class="tag">Sản xuất</span>' : '<span class="tag">Vận chuyển</span>'}
         </div>
       </div>
       <div class="order-meta">${factLines.map((line) => escapeHtml(line)).join("<br />")}</div>
       ${
         !isProduction && canCompleteDelivery() && String(order.status || "").trim().toLowerCase() !== "completed"
-          ? `<div class="order-actions"><button class="ghost-button" data-track-complete="${escapeHtml(order.order_id || "")}" type="button">Hoan tat giao</button></div>`
+          ? `<div class="order-actions"><button class="ghost-button" data-track-complete="${escapeHtml(order.order_id || "")}" type="button">Hoàn tất giao</button></div>`
           : ""
       }
     </article>
@@ -1745,12 +1570,12 @@ function renderNotifications() {
   notificationCount.textContent = String(visibleNotifications.length);
   notificationList.innerHTML = visibleNotifications.length
     ? visibleNotifications.map((item) => buildNotificationCardMarkup(item)).join("")
-    : '<article class="notification-empty-card">Chua co thong bao nao</article>';
+    : '<article class="notification-empty-card">Chưa có thông báo nào</article>';
 
   notificationHistoryCount.textContent = String(state.notificationArchive.length);
   notificationHistoryList.innerHTML = state.notificationArchive.length
     ? state.notificationArchive.map((item) => buildNotificationCardMarkup(item, { history: true })).join("")
-    : '<article class="notification-empty-card">Chua co lich su thong bao</article>';
+    : '<article class="notification-empty-card">Chưa có lịch sử thông báo</article>';
 
   notificationList.querySelectorAll("[data-notification-read]").forEach((node) => {
     node.addEventListener("click", async () => {
@@ -1765,8 +1590,8 @@ function renderNotifications() {
 
 function buildNotificationCardMarkup(item, options = {}) {
   const isUnread = !String(item?.read_at || "").trim() && !options.history;
-  const title = String(item?.title || item?.type || "Thong bao").trim();
-  const message = String(item?.message || "").trim() || "Khong co noi dung.";
+  const title = String(item?.title || item?.type || "Thông báo").trim();
+  const message = String(item?.message || "").trim() || "Không có nội dung.";
   const dateValue = item?.created_at || item?.read_at || "";
 
   return `
@@ -1794,7 +1619,7 @@ async function markNotificationRead(notificationId) {
     mergeNotificationArchive(state.notifications);
     renderNotifications();
   } catch (error) {
-    showToast(error.message || "Khong the danh dau da doc.", "error");
+    showToast(error.message || "Không thể đánh dấu đã đọc.", "error");
   }
 }
 
@@ -1809,9 +1634,9 @@ async function handleMarkAllNotificationsRead() {
     state.notifications = Array.isArray(payload.notifications) ? payload.notifications : [];
     mergeNotificationArchive(state.notifications);
     renderNotifications();
-    showToast("Da danh dau tat ca thong bao la da doc.", "success");
+    showToast("Đã đánh dấu tất cả thông báo là đã đọc.", "success");
   } catch (error) {
-    showToast(error.message || "Khong the cap nhat thong bao.", "error");
+    showToast(error.message || "Không thể cập nhật thông báo.", "error");
   } finally {
     markAllNotificationsReadButton.disabled = false;
   }
@@ -1821,7 +1646,7 @@ function handleClearNotificationHistory() {
   state.notificationArchive = [];
   saveNotificationArchive();
   renderNotifications();
-  showToast("Da xoa lich su thong bao.", "success");
+  showToast("Đã xóa lịch sử thông báo.", "success");
 }
 
 function mergeNotificationArchive(items) {
@@ -1870,25 +1695,25 @@ function getNotificationArchiveStorageKey() {
 function getTransportStatus(order) {
   const normalized = String(order?.status || "").trim().toLowerCase();
   if (normalized === "completed" || order?.completed_at) {
-    return { label: "Da giao", tone: "success" };
+    return { label: "Đã giao", tone: "success" };
   }
   if (normalized === "assigned") {
-    return { label: "Dang giao", tone: "warn" };
+    return { label: "Đang giao", tone: "warn" };
   }
-  return { label: "Dang xu ly", tone: "" };
+  return { label: "Đang xử lý", tone: "" };
 }
 
 function getProductionStatus(order) {
   if (order?.production_receipt_completed_at) {
-    return { label: "Da nhan du hang", tone: "success" };
+    return { label: "Đã nhận đủ hàng", tone: "success" };
   }
   if (order?.production_packaging_completed_at) {
-    return { label: "Da dong goi", tone: "warn" };
+    return { label: "Đã đóng gói", tone: "warn" };
   }
   if (String(order?.production_claimed_by_names || "").trim()) {
-    return { label: "Dang san xuat", tone: "" };
+    return { label: "Đang sản xuất", tone: "" };
   }
-  return { label: "Chua nhan", tone: "danger" };
+  return { label: "Chưa nhận", tone: "danger" };
 }
 
 function applyPermissionState() {
@@ -1978,12 +1803,12 @@ function applyOrderPayload(payload) {
 function renderHeroUser() {
   document.body.classList.toggle("telegram-authenticated", Boolean(state.currentUser));
   if (!state.currentUser) {
-    heroUserName.textContent = "Chua dang nhap";
-    heroUserMeta.textContent = TelegramWebApp ? "Dang mo trong Telegram" : "Dang test tren browser";
+    heroUserName.textContent = "Chưa đăng nhập";
+    heroUserMeta.textContent = TelegramWebApp ? "Đang mở trong Telegram" : "Đang test trên trình duyệt";
     return;
   }
 
-  heroUserName.textContent = state.currentUser.name || state.currentUser.username || "Da dang nhap";
+  heroUserName.textContent = state.currentUser.name || state.currentUser.username || "Đã đăng nhập";
   const parts = [
     labelRole(state.currentUser.role),
     labelDepartment(state.currentUser.department),
@@ -1995,32 +1820,32 @@ function renderHeroUser() {
 function labelRole(role) {
   const normalized = String(role || "").trim().toLowerCase();
   if (normalized === "admin") return "Admin";
-  if (normalized === "director") return "Giam doc";
-  if (normalized === "manager") return "Quan ly";
-  return "Nhan vien";
+  if (normalized === "director") return "Giám đốc";
+  if (normalized === "manager") return "Quản lý";
+  return "Nhân viên";
 }
 
 function labelDepartment(department) {
   const normalized = String(department || "").trim().toLowerCase();
   if (normalized === "sales") return "Kinh doanh";
-  if (normalized === "production") return "San xuat";
+  if (normalized === "production") return "Sản xuất";
   if (normalized === "operations" || normalized === "transport" || normalized === "logistics" || normalized === "delivery") {
-    return "Van chuyen";
+    return "Vận chuyển";
   }
-  if (normalized === "finance") return "Tai chinh";
-  if (normalized === "executive") return "Ban giam doc";
+  if (normalized === "finance") return "Tài chính";
+  if (normalized === "executive") return "Ban giám đốc";
   return department || "-";
 }
 
 function labelAccessLevel(level) {
   const normalized = String(level || "").trim().toLowerCase();
-  if (normalized === "advanced") return "Nang cao";
-  if (normalized === "sensitive") return "Ca nhan";
-  return "Co ban";
+  if (normalized === "advanced") return "Nâng cao";
+  if (normalized === "sensitive") return "Cá nhân";
+  return "Cơ bản";
 }
 
 function labelPaymentStatus(value) {
-  return String(value || "").trim().toLowerCase() === "paid" ? "Da thanh toan" : "Chua thanh toan";
+  return String(value || "").trim().toLowerCase() === "paid" ? "Đã thanh toán" : "Chưa thanh toán";
 }
 
 function normalizeOrderIdValue(value) {
@@ -2035,11 +1860,11 @@ function normalizeOrderIdValue(value) {
 
 function buildUserLabel(user) {
   const code = user?.employee_code || user?.username || user?.id || "-";
-  return `${user?.name || user?.username || "-"} • ${code}`;
+  return `${user?.name || user?.username || "-"} - ${code}`;
 }
 
 function buildDeliveryOptionLabel(order) {
-  return `${order.order_id || "-"} • ${order.customer_name || "-"} • ${order.delivery_user_name || "Chua giao NV"}`;
+  return `${order.order_id || "-"} - ${order.customer_name || "-"} - ${order.delivery_user_name || "Chưa giao NV"}`;
 }
 
 function formatCompactDateTime(value) {

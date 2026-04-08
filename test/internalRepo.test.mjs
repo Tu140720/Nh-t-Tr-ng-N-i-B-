@@ -9,6 +9,7 @@ import {
   deleteStorageFolder,
   deleteInternalDocument,
   deleteSyncSource,
+  importUploadedDocument,
   importSheetDocumentWithOptions,
   listCustomStorageFolders,
   loadInternalRepository,
@@ -147,6 +148,44 @@ test("luu tai lieu vao thu muc custom", async () => {
     });
 
     assert.match(saved.path, /data\/internal\/Kho chung mien Bac\//);
+  } finally {
+    await rm(cwd, { recursive: true, force: true });
+  }
+});
+
+test("upload file se luu ca file goc va ban md da trich xuat", async () => {
+  const cwd = await mkdtemp(path.join(tmpdir(), "upload-original-"));
+
+  try {
+    const internalDir = path.join(cwd, "data", "internal");
+    const uploadsDir = path.join(cwd, "data", "uploads");
+    const fileName = "Bao gia thang 4.txt";
+    const fileContent = "Dong 1\nDong 2";
+    const saved = await importUploadedDocument(internalDir, uploadsDir, cwd, {
+      title: "Bao gia thang 4",
+      fileName,
+      contentBase64: Buffer.from(fileContent, "utf8").toString("base64"),
+      effective_date: "2026-04-08",
+      owner: "sales",
+      owner_department: "sales",
+      access_level: "advanced",
+      allowed_departments: "sales",
+      status: "active",
+      topic_key: "bao-gia-thang-4",
+      storage_folder: "phong kinh doanh",
+      owner_user_id: "sheet-nt003",
+      shared_with_users: "",
+    });
+
+    const document = await readInternalDocument(internalDir, cwd, saved.path);
+    const originalFilePath = path.join(cwd, document.metadata.original_file_path);
+    const originalFileRaw = await readFile(originalFilePath, "utf8");
+
+    assert.equal(originalFileRaw, fileContent);
+    assert.equal(document.metadata.original_file_name, fileName);
+    assert.match(document.metadata.original_file_path, /data\/uploads\/phong kinh doanh\/\d{4}-\d{2}\//);
+    assert.match(document.metadata.original_file_path, /Bao gia thang 4\.txt$/);
+    assert.match(document.content, /Nguon file: Bao gia thang 4\.txt/);
   } finally {
     await rm(cwd, { recursive: true, force: true });
   }

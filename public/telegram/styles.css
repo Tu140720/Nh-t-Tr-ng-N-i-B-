@@ -862,7 +862,8 @@ body.telegram-authenticated .action-grid {
   gap: 0;
   position: relative;
   isolation: isolate;
-  overflow: visible;
+  overflow-x: auto;
+  overflow-y: visible;
   border: 1.5px solid #111;
   background: rgba(255, 251, 243, 0.96);
 }
@@ -876,15 +877,14 @@ body.telegram-authenticated .action-grid {
 .production-sheet-table-head,
 .production-create-row {
   display: grid;
-  grid-template-columns: 56px 128px minmax(220px, 1.5fr) 120px 88px 78px 78px 78px 78px 86px;
+  grid-template-columns: 56px minmax(220px, 1.7fr) 120px 88px 78px 78px 78px 78px 86px;
 }
 
 .production-sheet-table-head {
   grid-template-areas:
-    "stt code name norm unit qty status status status team"
-    "stt code name norm unit qty done missing extra team";
-  position: sticky;
-  top: 0;
+    "stt name norm unit qty status status status team"
+    "stt name norm unit qty done missing extra team";
+  position: relative;
   z-index: 12;
   isolation: isolate;
   background: rgba(232, 219, 191, 0.96);
@@ -935,10 +935,6 @@ body.telegram-authenticated .action-grid {
 
 .production-sheet-table-head .head-stt {
   grid-area: stt;
-}
-
-.production-sheet-table-head .head-code {
-  grid-area: code;
 }
 
 .production-sheet-table-head .head-name {
@@ -1084,7 +1080,7 @@ body.telegram-authenticated .action-grid {
 
 .order-item-name {
   padding-left: 12px;
-  padding-right: 52px;
+  padding-right: 12px;
 }
 
 .order-item-name-toggle {

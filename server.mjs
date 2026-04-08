@@ -80,6 +80,7 @@ import {
 import { createOrderStore } from "./lib/orderStore.mjs";
 
 const config = loadConfig(process.cwd());
+await mkdir(config.uploadsDir, { recursive: true });
 const orderStore = await createOrderStore({
   dbFilePath: path.resolve(config.cwd, "./data/orders/orders.sqlite"),
   legacyOrdersFile: path.resolve(config.cwd, "./data/orders/orders.json"),
@@ -1456,12 +1457,12 @@ async function handleRequest(request, response) {
       const orderValue = normalizeOrderValue(payload.order_value);
       const note = typeof payload.note === "string" ? payload.note.trim() : "";
 
-      if ((!requestedOrderId && orderKind !== "production") || !customerName || !salesUserId || (orderKind !== "production" && !deliveryUserId)) {
+      if (!customerName || !salesUserId || (orderKind !== "production" && !deliveryUserId)) {
         return sendJson(response, 400, {
           error:
             orderKind === "production"
               ? "Can nhap khach hang va nguoi yeu cau."
-              : "Can nhap ma don hang, khach hang, NVKD phu trach va nhan vien giao hang.",
+              : "Can nhap khach hang, NVKD phu trach va nhan vien giao hang.",
         });
       }
 
@@ -2029,7 +2030,7 @@ async function handleRequest(request, response) {
           });
         }
 
-        saved = await importUploadedDocument(config.internalDocsDir, config.cwd, {
+        saved = await importUploadedDocument(config.internalDocsDir, config.uploadsDir, config.cwd, {
           title,
           fileName,
           contentBase64,
@@ -4484,8 +4485,9 @@ function isDuplicateOrderConstraintError(error) {
 
 async function allocateOrderId(preferredOrderId, options = {}) {
   const orderKind = String(options.orderKind || "").trim().toLowerCase();
-  if (orderKind !== "production") {
-    return normalizeOrderId(preferredOrderId);
+  const normalizedPreferred = normalizeOrderId(preferredOrderId);
+  if (normalizedPreferred) {
+    return normalizedPreferred;
   }
 
   const existingOrders = await readOrders(resolveOrdersFile(config.cwd));
@@ -4496,11 +4498,12 @@ async function allocateOrderId(preferredOrderId, options = {}) {
     .map((item) => extractNumericOrderSuffix(item?.order_id || ""))
     .filter((value) => Number.isFinite(value));
 
-  let nextValue = extractNumericOrderSuffix(preferredOrderId);
-  if (!Number.isFinite(nextValue)) {
-    nextValue = Math.max(3000, ...(numericSuffixes.length ? numericSuffixes : [3000]));
-  }
+  let nextValue =
+    orderKind === "production"
+      ? Math.max(2999, ...(numericSuffixes.length ? numericSuffixes : [2999]))
+      : Math.max(0, ...(numericSuffixes.length ? numericSuffixes : [0]));
 
+  nextValue += 1;
   let candidate = formatSequentialOrderId(nextValue);
   while (existingIds.has(candidate)) {
     nextValue += 1;
